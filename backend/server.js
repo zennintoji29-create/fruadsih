@@ -81,6 +81,21 @@ async function startServer() {
       console.log(`📡 Base URL: http://localhost:${PORT}`);
       console.log(`🔍 Health Check: http://localhost:${PORT}/api/health`);
       console.log(`=======================================================`);
+
+      // 💓 Render 10-Minute Anti-Sleep Keep-Alive Heartbeat (Zero Cold Starts)
+      const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
+      const serviceUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+      
+      console.log(`[Keep-Alive] Initializing 10-minute anti-sleep heartbeat for: ${serviceUrl}`);
+      setInterval(async () => {
+        try {
+          const res = await fetch(`${serviceUrl}/api/health`);
+          const data = await res.json();
+          console.log(`[Keep-Alive Ping] 💓 Pinged ${serviceUrl}/api/health - Status: ${data.status} at ${new Date().toLocaleTimeString()}`);
+        } catch (pingErr) {
+          console.warn('[Keep-Alive Notice]:', pingErr.message);
+        }
+      }, PING_INTERVAL);
     });
   } catch (error) {
     console.error('Failed to initialize server:', error);
