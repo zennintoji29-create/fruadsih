@@ -61,6 +61,23 @@ export class RiskController {
       liveIntentQueue.unshift(liveIntent);
       if (liveIntentQueue.length > 50) liveIntentQueue.pop();
 
+      // Asynchronously relay live intent to Verix Web Dashboard (verix-web.onrender.com)
+      try {
+        fetch('https://verix-web.onrender.com/api/v1/intent/incoming', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: liveIntent.id,
+            vpa: liveIntent.vpa,
+            amount: liveIntent.amount,
+            name: liveIntent.recipientName,
+            note: liveIntent.note,
+            activeCall: Boolean(deviceContext?.activeCallDetected || callContext?.isOnCall),
+            threatCategory: liveIntent.riskScore >= 70 ? 'Extortion Threat' : 'Standard Intent'
+          })
+        }).catch(() => {});
+      } catch (relayErr) {}
+
       return res.status(200).json({
         success: true,
         riskScore: result.riskScore,
