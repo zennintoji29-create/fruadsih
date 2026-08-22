@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --plum-dark: #450c3f;        /* Deep Royal Plum / Aubergine */
+  --plum-hover: #33082e;
+  --lime-pistachio: #b9d175;   /* Vibrant Pistachio Lime */
+  --lime-soft: #d9efbd;        /* Soft Pastel Lime */
+  --cream-bg: #f5fbda;         /* Warm Light Cream / Ivory */
+  --card-bg: #ffffff;
+  --text-primary: #1e112a;
+  --text-muted: #5e4d6a;
+  --border-subtle: #e5ebc5;
+  --danger: #d92d20;
+  --success: #6b8f1a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+h1, h2, h3, h4, h5, .font-heading {
+  font-family: 'Outfit', sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+body {
+  background-color: #f5fbda;
+  color: var(--text-primary);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cream-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: #c3d98b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8c25c;
+}
+
+/* Realistic Smartphone Device Mock Frame - Premium Plum & Cream Theme */
+.smartphone-frame {
+  width: 390px;
+  height: 820px;
+  background: var(--cream-bg);
+  border-radius: 46px;
+  border: 10px solid #230620;
+  box-shadow: 
+    0 25px 60px -15px rgba(69, 12, 63, 0.5),
+    0 0 35px rgba(185, 209, 117, 0.25),
+    inset 0 0 4px rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dynamic-island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 24px;
+  background: #180315;
+  border-radius: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+}
+
+/* Circular Score Gauge Animation */
+.score-circle-bg {
+  stroke: #e3ebd1;
+}
+.score-circle-progress {
+  stroke: var(--plum-dark);
+  stroke-dasharray: 283;
+  stroke-dashoffset: 42;
+  transition: stroke-dashoffset 1s ease-in-out, stroke 0.5s ease;
+  stroke-linecap: round;
+}
+
+/* Luxury Card Elevation */
+.app-card {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 2px 8px rgba(69, 12, 63, 0.04);
+  border-radius: 20px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.app-card:hover {
+  box-shadow: 0 6px 16px rgba(69, 12, 63, 0.08);
+  border-color: var(--lime-pistachio);
+}
+
+/* Animations */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}

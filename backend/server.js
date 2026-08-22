@@ -10,7 +10,13 @@ import voicePhishRoutes from './routes/voicePhishRoutes.js';
 import threatRoutes from './routes/threatRoutes.js';
 import institutionRoutes from './routes/institutionRoutes.js';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,25 +31,25 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Root Health & Metadata
-app.get('/', (req, res) => {
-  res.json({
-    status: 'ONLINE',
-    project: 'Explainable Real-Time Fraud Shield (SIH S40)',
-    version: '1.0.0',
-    capabilities: [
-      'Pre-Transaction UPI Risk Engine (0-100 score + Explainability)',
-      'Voice Phishing & Live Audio Transcript Coercion Classifier',
-      'Android CallScreeningService & iOS CallKit native lookup API',
-      'NPCI / Sanchar Saathi / I4C Indian Cyber Threat Registry',
-      'Bank False-Positive Review & Appeal Dispute Workflow'
-    ],
-    timestamp: new Date().toISOString()
-  });
-});
+// Serve Static Swagger & API Explorer
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'HEALTHY', timestamp: new Date().toISOString() });
+// Dedicated Lightweight Health-Check Route (Item 2 of Verix Spec)
+const healthHandler = (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    service: 'verix-fraud-detection-api',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime())
+  });
+};
+
+app.get('/api/v1/health', healthHandler);
+app.get('/api/health', healthHandler);
+
+// Interactive Swagger / Endpoint Explorer Routes
+app.get(['/docs', '/swagger', '/api-docs', '/string', '/explorer'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Mount Modular API Routes

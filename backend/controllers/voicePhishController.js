@@ -51,7 +51,7 @@ export class VoicePhishController {
       }
 
       const duration = Number(durationSeconds) || 45;
-      const analysis = VoicePhishingService.analyzeTranscript(transcriptionText, {
+      const analysis = await VoicePhishingService.analyzeTranscript(transcriptionText, {
         callerNumber: callerNumber || 'SUSPECTED_VOICE_CALL',
         callDurationSeconds: duration
       });
@@ -105,7 +105,7 @@ export class VoicePhishController {
         });
       }
 
-      const analysis = VoicePhishingService.analyzeTranscript(transcript, {
+      const analysis = await VoicePhishingService.analyzeTranscript(transcript, {
         callerNumber,
         callDurationSeconds,
         isVideoCall

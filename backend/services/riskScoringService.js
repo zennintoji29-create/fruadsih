@@ -1,8 +1,10 @@
 import { RISK_LEVELS, ACTIONS } from '../config/constants.js';
 import { ThreatDbService } from './threatDbService.js';
 import { ExplainabilityService } from './explainabilityService.js';
+import { analyzePaymentMessageWithGroq } from './groqAiService.js';
 import { db } from '../config/db.js';
 import { v4 as uuidv4 } from 'uuid';
+import { logSupabaseTransaction } from '../config/supabase.js';
 
 export class RiskScoringService {
   /**
@@ -89,12 +91,32 @@ export class RiskScoringService {
       factorDetections.push(`Amount ₹${numAmount} exceeds configured safety threshold of ₹${userLimit}`);
     }
 
-    // Factor E: Note / Description NLP Checks
+    // Factor E: Note / Description NLP & Groq AI Checks (Extortion, Digital Arrest & Social Engineering)
     if (note) {
       const noteLower = note.toLowerCase();
-      if (noteLower.includes('refund') || noteLower.includes('reward') || noteLower.includes('task') || noteLower.includes('fine') || noteLower.includes('bail')) {
-        score += 15;
-        factorDetections.push(`Payment description contains high-frequency social engineering trigger word`);
+      const extortionTriggers = [
+        'arrest', 'cyber cell', 'police', 'customs', 'bail', 'fine', 'penalty', 
+        'clearance', 'deposit', 'electricity', 'kyc', 'unfreeze', 'court', 
+        'parcel', 'lottery', 'task', 'refund', 'cbi', 'narcotics', 'ed',
+        'complaint', 'legal action', 'station', 'officer', 'investigation',
+        'do not disconnect', 'screenshot', 'avoid legal', 'verification', 'fir', 'bbsr'
+      ];
+      
+      const matchedTriggers = extortionTriggers.filter(term => noteLower.includes(term));
+      if (matchedTriggers.length > 0) {
+        score += (matchedTriggers.length >= 2 ? 85 : 70);
+        factorDetections.push(`Payment message contains high-risk police impersonation / extortion indicators: "${matchedTriggers.join(', ')}"`);
+      }
+
+      // Try Groq LLM Deep Semantic Analysis
+      try {
+        const groqAnalysis = await analyzePaymentMessageWithGroq(note, cleanVpa, numAmount);
+        if (groqAnalysis && groqAnalysis.isExtortion) {
+          score = Math.max(score, groqAnalysis.threatScore || 90);
+          factorDetections.push(`Groq AI Threat Classifier: ${groqAnalysis.reason || 'Coercive extortion intent identified'}`);
+        }
+      } catch (err) {
+        console.warn('[RiskScoring] Groq message check fallback:', err.message);
       }
     }
 
@@ -161,6 +183,18 @@ export class RiskScoringService {
     db.transactionLogs.set(assessmentResult.assessmentId, assessmentResult);
     db.save();
 
+    // Async log transaction audit trail to Supabase Cloud PostgreSQL
+    logSupabaseTransaction({
+      senderVpa: user?.vpa || 'demo.user@upi',
+      receiverVpa: cleanVpa,
+      amount: numAmount,
+      riskScore: finalScore,
+      actionTaken: action,
+      explanation: typeof explanation === 'string' ? explanation : JSON.stringify(explanation),
+      metadata: { assessmentId: assessmentResult.assessmentId, factors: factorDetections }
+    }).catch(err => console.warn('[Supabase] Non-blocking log error:', err.message));
+
     return assessmentResult;
   }
 }
+

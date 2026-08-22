@@ -60,6 +60,20 @@ export class ExplainabilityService {
       });
     }
 
+    // 3.5 Suspicious Message / SMS Extortion Triggers
+    if (Array.isArray(reasons)) {
+      reasons.forEach(r => {
+        if (r.includes('coercion / extortion') || r.includes('indicator') || r.includes('note contains')) {
+          bulletPoints.unshift({
+            severity: 'CRITICAL',
+            code: 'COERCIVE_MESSAGE_PATTERN',
+            title: 'Extortion / Impersonation In Message',
+            description: r
+          });
+        }
+      });
+    }
+
     // 4. Contrastive Explanation (Why blocked vs Why allowed)
     if (riskScore >= 70) {
       contrastiveReasons.push(

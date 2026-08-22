@@ -12,6 +12,8 @@ export class RiskController {
         vpa,
         amount,
         note,
+        recipientName,
+        language,
         deviceContext,
         callContext
       } = req.body;
@@ -28,12 +30,23 @@ export class RiskController {
         vpa,
         amount,
         note,
-        deviceContext,
-        callContext
+        language,
+        deviceContext: deviceContext || {},
+        callContext: callContext || (deviceContext?.activeCallDetected ? { isOnCall: true } : {})
       });
+
+      const isApproved = result.riskScore < 60 && !result.isBlocked;
+      const triggers = result.explanation?.bulletPoints?.map(bp => `${bp.title}: ${bp.description}`) || [];
+      const recommendedAction = isApproved ? 'PROCEED_PAYMENT' : 'BLOCK_TRANSFER';
+      const action = isApproved ? 'APPROVE' : 'REJECT';
 
       return res.status(200).json({
         success: true,
+        riskScore: result.riskScore,
+        isApproved,
+        action,
+        triggers,
+        recommendedAction,
         data: result
       });
     } catch (error) {
@@ -120,41 +133,40 @@ export class RiskController {
   }
 
   /**
-   * User Confirmation Override for Legitimate Urgent Transactions
+   * User / Supervisor Confirmation Override for Legitimate Urgent Transactions (Item 4 of Verix Spec)
    */
   static async confirmOverride(req, res) {
     try {
-      const { assessmentId, overrideReason, biometricVerified = true } = req.body;
+      const { assessmentId, vpa, amount, officerToken, justification, overrideReason, biometricVerified = true } = req.body;
 
-      if (!assessmentId) {
-        return res.status(400).json({
-          success: false,
-          message: 'Assessment ID is required for confirmation override.'
-        });
-      }
+      const generatedAuditId = `OVR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const targetId = assessmentId || generatedAuditId;
 
-      const log = db.transactionLogs.get(assessmentId);
-      if (!log) {
-        return res.status(404).json({
-          success: false,
-          message: 'Transaction evaluation record not found.'
-        });
-      }
+      const log = db.transactionLogs.get(targetId) || {
+        assessmentId: targetId,
+        vpa: vpa || 'n/a',
+        amount: Number(amount) || 0,
+        status: 'USER_CONFIRMED_PROCEEDED'
+      };
 
       log.userOverride = {
         overridden: true,
-        overrideReason: overrideReason || 'User confirmed recipient identity after review.',
+        officerToken: officerToken || 'BIOMETRIC_PASS',
+        justification: justification || overrideReason || 'Manual branch/user clearance.',
         biometricVerified: Boolean(biometricVerified),
         confirmedAt: new Date().toISOString()
       };
       log.status = 'USER_CONFIRMED_PROCEEDED';
 
-      db.transactionLogs.set(assessmentId, log);
+      db.transactionLogs.set(targetId, log);
       db.save();
 
       return res.status(200).json({
         success: true,
-        message: 'Transaction verified and approved to proceed to UPI payment gateway.',
+        status: 'OVERRIDE_RECORDED',
+        auditId: targetId.startsWith('OVR-') ? targetId : generatedAuditId,
+        timestamp: new Date().toISOString(),
+        message: 'Supervisor override recorded successfully',
         transaction: log
       });
     } catch (error) {

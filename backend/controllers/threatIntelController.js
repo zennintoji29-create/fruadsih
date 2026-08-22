@@ -32,26 +32,36 @@ export class ThreatIntelController {
   }
 
   /**
-   * Report new Scammer VPA or Phone
+   * Report new Scammer VPA or Phone (Item 5 of Verix Spec)
    */
   static async report(req, res) {
     try {
-      const { identifier, type, category, details, reportedBy } = req.body;
-      if (!identifier) {
-        return res.status(400).json({ success: false, message: 'Identifier (VPA or Phone) is required.' });
+      const { vpa, amount, threatType, evidenceNote, reportedBy, identifier, type, category, details } = req.body;
+      const targetIdentifier = vpa || identifier;
+
+      if (!targetIdentifier) {
+        return res.status(400).json({ success: false, message: 'Recipient UPI ID (vpa or identifier) is required.' });
       }
 
+      const effectiveType = type || (targetIdentifier.includes('@') ? 'VPA' : 'PHONE');
+      const effectiveCategory = threatType || category || 'EXTORTION_FRAUD';
+      const effectiveDetails = evidenceNote || details || `Reported amount ₹${amount || 0}`;
+
       const record = await ThreatDbService.reportScammer({
-        identifier,
-        type,
-        category,
-        details,
-        reportedBy
+        identifier: targetIdentifier,
+        type: effectiveType,
+        category: effectiveCategory,
+        details: effectiveDetails,
+        reportedBy: reportedBy || 'admin@verix.gov.in'
       });
+
+      const reportId = `I4C-REP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
       return res.status(201).json({
         success: true,
-        message: 'Threat reported successfully',
+        reportId,
+        blacklisted: true,
+        message: 'Incident reported to 1930 Cyber Fraud Database',
         data: record
       });
     } catch (error) {

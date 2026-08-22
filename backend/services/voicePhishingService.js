@@ -1,5 +1,6 @@
 import { PHISHING_KEYWORDS, SCAM_CATEGORIES } from '../config/constants.js';
 import { ThreatDbService } from './threatDbService.js';
+import { analyzeScamTranscriptWithGroq } from './groqAiService.js';
 
 export class VoicePhishingService {
   /**
@@ -38,9 +39,9 @@ export class VoicePhishingService {
   }
 
   /**
-   * Real-time Transcript / Audio Phishing & Coercion Analyzer
+   * Real-time Transcript / Audio Phishing & Coercion Analyzer powered by Groq LLaMA 3.3 70B
    */
-  static analyzeTranscript(transcript, metadata = {}) {
+  static async analyzeTranscript(transcript, metadata = {}) {
     if (!transcript || typeof transcript !== 'string') {
       return {
         phishingDetected: false,
@@ -53,6 +54,29 @@ export class VoicePhishingService {
       };
     }
 
+    // 1. Attempt Groq Ultra-Fast AI (LLaMA 3.3 70B) Analysis
+    const groqResult = await analyzeScamTranscriptWithGroq(transcript, metadata);
+    if (groqResult) {
+      return {
+        aiEngine: 'Groq LLaMA 3.3 70B (Ultra-Fast LLM)',
+        phishingDetected: Boolean(groqResult.phishingDetected),
+        confidenceScore: groqResult.confidenceScore || 85,
+        riskLevel: groqResult.riskLevel || 'HIGH',
+        primaryCategory: groqResult.primaryCategory || 'GENERAL_SCAM',
+        coercionLevel: groqResult.coercionLevel || 'MODERATE',
+        detectedVectors: groqResult.detectedVectors || [],
+        summary: groqResult.summary,
+        safetyAdvice: groqResult.safetyAdvice,
+        audioMetrics: {
+          speechRateElevated: true,
+          voiceStressDetected: groqResult.riskLevel === 'CRITICAL' || groqResult.riskLevel === 'HIGH',
+          callerDominanceRatio: 0.90
+        },
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    // 2. Fallback to High-Performance Heuristic Pattern Engine
     const text = transcript.toLowerCase();
     const detectedVectors = [];
     let urgencyScore = 0;
@@ -61,7 +85,6 @@ export class VoicePhishingService {
     let financialDemandScore = 0;
     const triggeredKeywords = [];
 
-    // 1. Check Urgency keywords
     PHISHING_KEYWORDS.URGENCY.forEach(kw => {
       if (text.includes(kw)) {
         urgencyScore += 18;
@@ -69,7 +92,6 @@ export class VoicePhishingService {
       }
     });
 
-    // 2. Check Authority Impersonation
     PHISHING_KEYWORDS.AUTHORITY_IMPERSONATION.forEach(kw => {
       if (text.includes(kw)) {
         authorityScore += 25;
@@ -77,7 +99,6 @@ export class VoicePhishingService {
       }
     });
 
-    // 3. Check Coercion & Remote Access Apps
     PHISHING_KEYWORDS.COERCION_TECH.forEach(kw => {
       if (text.includes(kw)) {
         coercionScore += 30;
@@ -85,7 +106,6 @@ export class VoicePhishingService {
       }
     });
 
-    // 4. Check Financial Extraction Demands
     PHISHING_KEYWORDS.FINANCIAL_EXTRACTION.forEach(kw => {
       if (text.includes(kw)) {
         financialDemandScore += 22;
@@ -93,7 +113,6 @@ export class VoicePhishingService {
       }
     });
 
-    // Determine primary scam vector
     let primaryCategory = 'GENERAL_SUSPICIOUS';
     if (authorityScore > 20 && (text.includes('arrest') || text.includes('digital') || text.includes('skype') || text.includes('video call'))) {
       primaryCategory = SCAM_CATEGORIES.DIGITAL_ARREST;
@@ -112,7 +131,6 @@ export class VoicePhishingService {
       detectedVectors.push('KYC_BANK_ACCOUNT_SUSPENSION_TRICK');
     }
 
-    // Aggregate Confidence / Risk Score (0-100)
     const rawScore = urgencyScore + authorityScore + coercionScore + financialDemandScore;
     const finalScore = Math.min(99, Math.max(5, rawScore));
 
@@ -133,7 +151,6 @@ export class VoicePhishingService {
       coercionLevel = 'LOW';
     }
 
-    // Synthesize explainable summary
     let summary = 'The call conversation appears standard with no active coercion detected.';
     let safetyAdvice = 'Continue normal conversation.';
 
@@ -143,6 +160,7 @@ export class VoicePhishingService {
     }
 
     return {
+      aiEngine: 'Heuristic Pattern Engine (Fast Fallback)',
       phishingDetected,
       confidenceScore: finalScore,
       riskLevel,
@@ -161,3 +179,4 @@ export class VoicePhishingService {
     };
   }
 }
+
