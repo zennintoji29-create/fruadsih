@@ -47,6 +47,17 @@ const healthHandler = (req, res) => {
 app.get('/api/v1/health', healthHandler);
 app.get('/api/health', healthHandler);
 
+import { liveIntentQueue } from './controllers/riskController.js';
+
+// Live Real-Time Intent Stream Endpoint for Web Dashboard (verix-web.onrender.com)
+app.get(['/api/v1/intent/latest', '/api/intent/latest', '/api/v1/intents'], (req, res) => {
+  res.json({
+    success: true,
+    count: liveIntentQueue.length,
+    intents: liveIntentQueue
+  });
+});
+
 // Interactive Swagger / Endpoint Explorer Routes
 app.get(['/docs', '/swagger', '/api-docs', '/string', '/explorer'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

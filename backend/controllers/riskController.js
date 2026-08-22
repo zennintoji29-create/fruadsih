@@ -1,6 +1,8 @@
 import { RiskScoringService } from '../services/riskScoringService.js';
 import { db } from '../config/db.js';
 
+export const liveIntentQueue = [];
+
 export class RiskController {
   /**
    * Pre-Transaction Risk Check
@@ -39,6 +41,25 @@ export class RiskController {
       const triggers = result.explanation?.bulletPoints?.map(bp => `${bp.title}: ${bp.description}`) || [];
       const recommendedAction = isApproved ? 'PROCEED_PAYMENT' : 'BLOCK_TRANSFER';
       const action = isApproved ? 'APPROVE' : 'REJECT';
+
+      // Push to live real-time intent queue for Web Dashboard (verix-web.onrender.com)
+      const liveIntent = {
+        id: result.assessmentId || `intent-${Date.now()}`,
+        vpa: vpa.trim(),
+        amount: Number(amount) || 0,
+        note: note ? note.trim() : '',
+        recipientName: recipientName || vpa.trim(),
+        riskScore: result.riskScore,
+        riskLevel: result.riskLevel,
+        action: action,
+        isApproved: isApproved,
+        triggers: triggers,
+        recommendedAction: recommendedAction,
+        deviceContext: deviceContext || {},
+        timestamp: new Date().toISOString()
+      };
+      liveIntentQueue.unshift(liveIntent);
+      if (liveIntentQueue.length > 50) liveIntentQueue.pop();
 
       return res.status(200).json({
         success: true,
