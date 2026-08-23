@@ -298,41 +298,41 @@ export default function App() {
   const renderBottomNav = () => {
     if (!currentUser || needsPermissionsOnboarding) return null;
     return (
-      <div className="h-20 pb-4 bg-white/95 backdrop-blur-md border-t border-[#e5ebc5] flex items-center justify-around px-2 z-30 shadow-lg shrink-0">
+      <div className="h-[72px] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 bg-white/95 backdrop-blur-md border-t border-[#e5ebc5] flex items-center justify-around px-3 z-30 shadow-lg shrink-0 w-full max-w-md mx-auto">
         <button
           onClick={() => setCurrentScreen('home')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all flex-1 py-1 ${
             currentScreen === 'home' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
           }`}
         >
-          <HomeIcon className="w-4 h-4" /> {t.navHome}
+          <HomeIcon className="w-4 h-4 stroke-[2.2]" /> {t.navHome}
         </button>
 
         <button
           onClick={() => setCurrentScreen('payments')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all flex-1 py-1 ${
             currentScreen === 'payments' || currentScreen === 'upi-check' || currentScreen === 'analysis' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
           }`}
         >
-          <CreditCard className="w-4 h-4" /> {t.navPayments}
+          <CreditCard className="w-4 h-4 stroke-[2.2]" /> {t.navPayments}
         </button>
 
         <button
-          onClick={() => setCurrentScreen('alerts')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all ${
-            currentScreen === 'alerts' || currentScreen === 'history' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
+          onClick={() => setCurrentScreen('history')}
+          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all flex-1 py-1 ${
+            currentScreen === 'history' || currentScreen === 'alerts' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
           }`}
         >
-          <Bell className="w-4 h-4" /> {t.navAlerts}
+          <History className="w-4 h-4 stroke-[2.2]" /> {t.navHistory || 'History'}
         </button>
 
         <button
           onClick={() => setCurrentScreen('settings')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all ${
+          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all flex-1 py-1 ${
             currentScreen === 'settings' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
           }`}
         >
-          <SlidersHorizontal className="w-4 h-4" /> {t.navSettings}
+          <SlidersHorizontal className="w-4 h-4 stroke-[2.2]" /> {t.navSettings || 'Settings'}
         </button>
       </div>
     );
@@ -346,7 +346,7 @@ export default function App() {
   // 1. FIRST-TIME PERMISSIONS & 4-DIGIT MPIN SETUP (AFTER LOGIN)
   if (currentUser && needsPermissionsOnboarding) {
     return (
-      <div className="h-screen w-screen bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none">
+      <div className="h-[100dvh] w-full max-w-md mx-auto bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none">
         <PermissionsOnboarding 
           lang={currentLang}
           onComplete={() => {
@@ -361,18 +361,20 @@ export default function App() {
   // 2. APP PIN LOCK SCREEN (ONLY AFTER ONBOARDED & MPIN IS CONFIGURED)
   if (currentUser && isAppLocked) {
     return (
-      <AppLockScreen 
-        currentLang={currentLang}
-        onUnlock={() => setIsAppLocked(false)} 
-        onForgotPin={handleLogout}
-      />
+      <div className="h-[100dvh] w-full max-w-md mx-auto bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none">
+        <AppLockScreen 
+          currentLang={currentLang}
+          onUnlock={() => setIsAppLocked(false)} 
+          onForgotPin={handleLogout}
+        />
+      </div>
     );
   }
 
   // NATIVE ANDROID / MOBILE FULL-SCREEN RENDERING
   if (isMobileDevice) {
     return (
-      <div className="h-screen w-screen bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none">
+      <div className="h-[100dvh] w-full max-w-md mx-auto bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none shadow-2xl relative">
         <div className="flex-1 overflow-y-auto relative flex flex-col">
           {renderScreenContent()}
           {showCallSimulation && (

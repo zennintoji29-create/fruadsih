@@ -10,9 +10,9 @@ export default function PaymentProtectionScreen({ user, onNavigate, currentLang 
   const [realtimeEnabled, setRealtimeEnabled] = useState(true);
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#f5fbda] text-[#1e112a] p-4 space-y-4 font-sans selection:bg-[#450c3f] selection:text-white pb-8">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#f5fbda] text-[#1e112a] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-28 space-y-4 font-sans selection:bg-[#450c3f] selection:text-white">
       {/* Top Header */}
-      <div className="flex items-center justify-between pt-4 pb-1">
+      <div className="flex items-center justify-between pb-1">
         <div className="flex items-center gap-1.5">
           <div className="p-1 rounded-lg bg-[#450c3f] text-[#b9d175]">
             <Shield className="w-4 h-4" />

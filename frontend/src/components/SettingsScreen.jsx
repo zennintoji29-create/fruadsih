@@ -113,9 +113,9 @@ export default function SettingsScreen({ onBack, user, onUpdateUser, onLogout, c
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#f5fbda] text-[#1e112a] p-4 space-y-4 font-sans selection:bg-[#450c3f] selection:text-white pb-8">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#f5fbda] text-[#1e112a] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-28 space-y-4 font-sans selection:bg-[#450c3f] selection:text-white">
       {/* Top Header */}
-      <div className="flex items-center justify-between pt-4 pb-1">
+      <div className="flex items-center justify-between pb-1">
         <button 
           onClick={onBack}
           className="p-1.5 rounded-xl hover:bg-[#d9efbd] text-[#450c3f] transition-all"

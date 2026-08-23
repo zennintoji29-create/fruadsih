@@ -34,6 +34,23 @@ app.use(morgan('dev'));
 // Serve Static Swagger & API Explorer
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Root Status & Heartbeat (Item 1 of Verix Spec)
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'ONLINE',
+    project: 'Verix — Explainable Real-Time Fraud Shield',
+    version: '1.0.0',
+    capabilities: [
+      'UPI_RISK_ENGINE',
+      'VOICE_PHISHING_SENTINEL',
+      'LIVE_INTENT_STREAM',
+      'CYBERCRIME_REGISTRY_SYNC'
+    ],
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Dedicated Lightweight Health-Check Route (Item 2 of Verix Spec)
 const healthHandler = (req, res) => {
   res.status(200).json({
@@ -47,7 +64,10 @@ const healthHandler = (req, res) => {
 app.get('/api/v1/health', healthHandler);
 app.get('/api/health', healthHandler);
 
-import { liveIntentQueue } from './controllers/riskController.js';
+import { liveIntentQueue, RiskController } from './controllers/riskController.js';
+
+// Inbound Webhook for Hardware / Mobile App Intent Injection
+app.post(['/api/v1/intent/incoming', '/api/intent/incoming'], RiskController.evaluateRisk);
 
 // Live Real-Time Intent Stream Endpoint for Web Dashboard (verix-web.onrender.com)
 app.get(['/api/v1/intent/latest', '/api/intent/latest', '/api/v1/intents'], (req, res) => {

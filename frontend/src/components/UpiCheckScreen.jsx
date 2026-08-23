@@ -213,30 +213,67 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
     } catch (e) {}
   };
 
-  const triggerUpiHandoff = async () => {
+  const triggerUpiHandoff = async (targetPackage = null) => {
     setPaymentInitiated(true);
     const cleanVpa = vpa.trim();
     const payeeName = cleanVpa.split('@')[0] || 'Payee';
-    const amountVal = amount ? amount.toString().trim() : '';
     const noteVal = note ? note.trim() : 'Payment';
 
-    if (Capacitor.isNativePlatform()) {
+    let formattedAmount = '';
+    if (amount) {
+      const numericAmount = parseFloat(amount.toString().replace(/[^0-9.]/g, ''));
+      if (!isNaN(numericAmount) && numericAmount > 0) {
+        formattedAmount = numericAmount.toFixed(2);
+      }
+    }
+
+    // Auto-copy VPA so user can paste inside UPI app if needed
+    try {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(cleanVpa);
+      }
+    } catch (ignore) {}
+
+    // 1. Fire native Android Launcher via Capacitor Plugin Bridge
+    if (Capacitor.isNativePlatform() || window.Capacitor?.isNativePlatform?.()) {
       try {
+        if (targetPackage) {
+          await PermissionHelper.launchAppDirectly({
+            packageName: targetPackage,
+            vpa: cleanVpa
+          });
+          return;
+        }
+
         await PermissionHelper.openUpiPayment({
+          pa: cleanVpa,
           vpa: cleanVpa,
+          pn: payeeName,
           name: payeeName,
-          amount: amountVal,
+          amount: formattedAmount,
+          am: formattedAmount,
           note: noteVal,
+          tn: noteVal,
+          isMerchant: false,
+          forcePrefill: false,
           packageName: null
         });
         return;
       } catch (e) {
-        console.warn('[Native UPI Handoff Fallback]:', e);
+        console.warn('[Native UPI Handoff Fallback to Browser]:', e);
       }
     }
 
-    // Web Fallback
-    const upiUri = `upi://pay?pa=${encodeURIComponent(cleanVpa)}&pn=${encodeURIComponent(payeeName)}${amountVal ? `&am=${encodeURIComponent(amountVal)}` : ''}&cu=INR&tn=${encodeURIComponent(noteVal)}`;
+    // 2. Pure Web / Browser Fallback only
+    const params = new URLSearchParams({
+      pa: cleanVpa,
+      pn: payeeName || 'Payee',
+      cu: 'INR'
+    });
+
+    if (noteVal) params.append('tn', noteVal);
+
+    const upiUri = `upi://pay?${params.toString()}`;
     window.location.href = upiUri;
   };
 
@@ -245,6 +282,21 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
     setTicketId(generatedId);
     setCountdownSeconds(300); // 5 mins
     setAdminReviewState('waiting');
+
+    // Save to local History storage
+    try {
+      const existing = JSON.parse(localStorage.getItem('shieldx_tickets_history') || '[]');
+      const newEntry = {
+        id: generatedId,
+        vpa: vpa || 'Unknown VPA',
+        submittedAt: 'Just now',
+        status: 'PENDING_REVIEW',
+        statusLabel: 'Pending Admin Review',
+        statusColor: 'bg-amber-100 text-amber-800 border-amber-200',
+        adminNote: 'Ticket received by Verix Fraud Review Engine. Bank surveillance agent currently analyzing VPA history and registry status.'
+      };
+      localStorage.setItem('shieldx_tickets_history', JSON.stringify([newEntry, ...existing]));
+    } catch (e) {}
 
     // Notify backend if available
     try {
@@ -461,9 +513,9 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
   // DEFAULT VIEW: PRE-PAYMENT CHECK FORM & RESULTS
   // -------------------------------------------------------------
   return (
-    <div className="flex flex-col h-full overflow-y-auto p-4 space-y-4 bg-[#f5fbda] text-[#1e112a] font-sans">
+    <div className="flex flex-col h-full overflow-y-auto px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-28 space-y-4 bg-[#f5fbda] text-[#1e112a] font-sans selection:bg-[#450c3f] selection:text-white">
       {/* Top Header */}
-      <div className="flex items-center justify-between pt-4 pb-1">
+      <div className="flex items-center justify-between pb-1">
         <button 
           onClick={onBack}
           className="p-2 rounded-xl bg-white border border-[#e5ebc5] hover:bg-[#d9efbd] text-[#450c3f] transition-all flex items-center gap-1 text-xs font-semibold shadow-sm"
@@ -655,44 +707,51 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
                 </div>
               </div>
             ))}
-          </div>
+            {/* Payment Launcher Row */}
+            <div className="pt-2 space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#5e4d6a] block">
+                Select UPI Payment Gateway:
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {/* Google Pay Direct (Bypasses 3rd party limit) */}
+                <button
+                  onClick={() => triggerUpiHandoff('com.google.android.apps.nbu.paisa.user')}
+                  className="py-2.5 px-3 bg-white hover:bg-slate-50 text-[#1e112a] border border-[#e5ebc5] rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition-all"
+                >
+                  <span className="text-sm">🔵</span> Google Pay
+                </button>
 
-          {/* 3 ACTIONS: SUBMIT TICKET | PROCEED TO PAY | BLOCK & REJECT */}
-          <div className="pt-2 space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              {/* Button 1: Submit Ticket to Admin */}
+                {/* PhonePe Direct */}
+                <button
+                  onClick={() => triggerUpiHandoff('com.phonepe.app')}
+                  className="py-2.5 px-3 bg-white hover:bg-slate-50 text-[#1e112a] border border-[#e5ebc5] rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition-all"
+                >
+                  <span className="text-sm">🟣</span> PhonePe
+                </button>
+              </div>
+
+              {/* General UPI Intent Chooser */}
+              <button
+                onClick={() => triggerUpiHandoff(null)}
+                className="w-full py-3 bg-[#450c3f] hover:bg-[#33082e] text-[#f5fbda] rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all"
+              >
+                <Send className="w-4 h-4 text-[#b9d175]" /> Fast Auto-Fill (Other UPI Apps)
+              </button>
+
+              {/* Submit Review Ticket */}
               <button
                 onClick={handleSubmitTicket}
-                className="py-3 bg-white hover:bg-slate-50 text-[#450c3f] border-2 border-[#450c3f]/30 hover:border-[#450c3f] rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                className="w-full py-2.5 bg-white hover:bg-slate-50 text-[#450c3f] border border-[#450c3f]/30 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs active:scale-98 transition-all"
               >
-                <Ticket className="w-4 h-4 text-[#450c3f]" /> Submit Ticket
+                <Ticket className="w-3.5 h-3.5 text-[#450c3f]" /> Submit False Positive Ticket
               </button>
 
-              {/* Button 2: Proceed to Pay */}
-              <button
-                onClick={triggerUpiHandoff}
-                className="py-3 bg-[#450c3f] hover:bg-[#33082e] text-[#f5fbda] rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-[#450c3f]/25 active:scale-95 transition-all"
-              >
-                <Send className="w-4 h-4 text-[#b9d175]" /> Proceed to Pay
-              </button>
+              {paymentInitiated && (
+                <p className="text-[10px] text-[#6b8f1a] text-center font-mono font-bold animate-fade-in">
+                  ✓ VPA Copied & Transferred to UPI App!
+                </p>
+              )}
             </div>
-
-            {/* Button 3: Block & Reject */}
-            <button
-              onClick={() => {
-                alert(`🚫 ${vpa} has been blocked and reported to 1930 Cyber Cell.`);
-                setResult(null);
-              }}
-              className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 active:scale-98 transition-all"
-            >
-              <XCircle className="w-4 h-4 text-rose-600" /> Block / Reject
-            </button>
-
-            {paymentInitiated && (
-              <p className="text-[10px] text-[#6b8f1a] text-center font-mono font-bold animate-fade-in">
-                ✓ Handed off to your installed UPI payment app!
-              </p>
-            )}
           </div>
         </div>
       )}
