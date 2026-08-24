@@ -298,42 +298,49 @@ export default function App() {
   const renderBottomNav = () => {
     if (!currentUser || needsPermissionsOnboarding) return null;
     return (
-      <div className="h-[72px] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 bg-white/95 backdrop-blur-md border-t border-[#e5ebc5] flex items-center justify-around px-3 z-30 shadow-lg shrink-0 w-full max-w-md mx-auto">
-        <button
-          onClick={() => setCurrentScreen('home')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all flex-1 py-1 ${
-            currentScreen === 'home' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
-          }`}
-        >
-          <HomeIcon className="w-4 h-4 stroke-[2.2]" /> {t.navHome}
-        </button>
-
-        <button
-          onClick={() => setCurrentScreen('payments')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all flex-1 py-1 ${
-            currentScreen === 'payments' || currentScreen === 'upi-check' || currentScreen === 'analysis' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
-          }`}
-        >
-          <CreditCard className="w-4 h-4 stroke-[2.2]" /> {t.navPayments}
-        </button>
-
-        <button
-          onClick={() => setCurrentScreen('history')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all flex-1 py-1 ${
-            currentScreen === 'history' || currentScreen === 'alerts' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
-          }`}
-        >
-          <History className="w-4 h-4 stroke-[2.2]" /> {t.navHistory || 'History'}
-        </button>
-
-        <button
-          onClick={() => setCurrentScreen('settings')}
-          className={`flex flex-col items-center gap-1 text-[10px] font-semibold transition-all flex-1 py-1 ${
-            currentScreen === 'settings' ? 'text-[#450c3f] font-bold scale-105' : 'text-[#5e4d6a] hover:text-[#1e112a]'
-          }`}
-        >
-          <SlidersHorizontal className="w-4 h-4 stroke-[2.2]" /> {t.navSettings || 'Settings'}
-        </button>
+      <div
+        className="shrink-0 w-full max-w-md mx-auto z-30 flex items-stretch"
+        style={{
+          background: 'rgba(18,5,26,0.95)',
+          backdropFilter: 'blur(24px)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
+        }}
+      >
+        {[
+          { id: 'home', icon: HomeIcon, label: t.navHome || 'Home' },
+          { id: 'payments', icon: CreditCard, label: t.navPayments || 'Pay', extraIds: ['upi-check', 'analysis'] },
+          { id: 'history', icon: History, label: t.navHistory || 'History', extraIds: ['alerts'] },
+          { id: 'settings', icon: SlidersHorizontal, label: t.navSettings || 'Settings' },
+        ].map(({ id, icon: Icon, label, extraIds = [] }) => {
+          const isActive = currentScreen === id || extraIds.includes(currentScreen);
+          return (
+            <button
+              key={id}
+              onClick={() => setCurrentScreen(id)}
+              className="flex-1 flex flex-col items-center justify-center pt-3 pb-1 gap-1 transition-all active:scale-90"
+            >
+              <div
+                className="w-10 h-8 rounded-[14px] flex items-center justify-center transition-all"
+                style={isActive ? {
+                  background: 'linear-gradient(135deg, rgba(216,248,40,0.2) 0%, rgba(196,235,26,0.1) 100%)',
+                  border: '1px solid rgba(216,248,40,0.3)',
+                } : {}}
+              >
+                <Icon
+                  className={`w-[18px] h-[18px] stroke-[2] transition-colors ${isActive ? 'text-[#D8F828]' : 'text-white/30'}`}
+                />
+              </div>
+              <span
+                className={`text-[10px] font-semibold transition-colors ${isActive ? 'text-[#D8F828]' : 'text-white/25'}`}
+                style={{ fontFamily: 'Outfit, sans-serif' }}
+              >
+                {label}
+              </span>
+            </button>
+          );
+        })}
       </div>
     );
   };
@@ -374,7 +381,7 @@ export default function App() {
   // NATIVE ANDROID / MOBILE FULL-SCREEN RENDERING
   if (isMobileDevice) {
     return (
-      <div className="h-[100dvh] w-full max-w-md mx-auto bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none shadow-2xl relative">
+      <div className="h-[100dvh] w-full max-w-md mx-auto flex flex-col overflow-hidden font-sans select-none shadow-2xl relative" style={{ background: 'linear-gradient(160deg, #1B0A22 0%, #23072D 40%, #150520 75%, #0D0215 100%)' }}>
         <div className="flex-1 overflow-y-auto relative flex flex-col">
           {renderScreenContent()}
           {showCallSimulation && (

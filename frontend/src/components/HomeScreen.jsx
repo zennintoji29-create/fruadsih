@@ -1,182 +1,331 @@
-import React from 'react';
-import { 
-  Shield, Search, QrCode, Mic, SlidersHorizontal, 
-  ArrowUpRight, PhoneCall, Globe, Sparkles, Zap, ChevronRight 
+import React, { useState } from 'react';
+import {
+  Shield, Search, QrCode, Mic, SlidersHorizontal,
+  ArrowUpRight, PhoneCall, Globe, Sparkles, Zap,
+  ChevronRight, Lock, TrendingUp, AlertTriangle, CheckCircle2
 } from 'lucide-react';
 import { translations } from '../translations';
 
 export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLanguageChange, onTriggerCallSimulation }) {
   const t = translations[currentLang] || translations.en;
+  const [langOpen, setLangOpen] = useState(false);
 
   const languages = [
-    { code: 'en', label: 'English' },
-    { code: 'hi', label: 'हिंदी' },
-    { code: 'or', label: 'ଓଡ଼ିଆ' },
-    { code: 'bn', label: 'বাংলা' },
-    { code: 'te', label: 'తెలుగు' },
-    { code: 'ta', label: 'தமிழ்' }
+    { code: 'en', label: 'EN' },
+    { code: 'hi', label: 'हि' },
+    { code: 'or', label: 'ଓ' },
+    { code: 'bn', label: 'বা' },
+    { code: 'te', label: 'తె' },
+    { code: 'ta', label: 'த' },
   ];
 
+  const currentLangLabel = languages.find(l => l.code === currentLang)?.label || 'EN';
+
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#F7F8F2] text-slate-900 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-28 space-y-3.5 font-sans selection:bg-[#D8F828] selection:text-[#1A0317] w-full">
-      {/* ── 1. Top Header: Modern Clean Status & Tools ── */}
-      <div className="flex items-center justify-between pt-0.5 pb-0.5">
+    <div
+      className="flex flex-col min-h-full w-full font-sans select-none"
+      style={{
+        background: 'linear-gradient(160deg, #1B0A22 0%, #23072D 40%, #150520 75%, #0D0215 100%)',
+      }}
+    >
+      {/* ── STATUS BAR AREA ── */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-2">
+        {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#380932] to-[#20031C] text-[#D8F828] shadow-md shadow-[#380932]/20 flex items-center justify-center shrink-0">
-            <Shield className="w-5 h-5 stroke-[2.4]" />
+          <div
+            className="w-9 h-9 rounded-[14px] flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, #D8F828 0%, #A8CC18 100%)',
+              boxShadow: '0 4px 16px rgba(216,248,40,0.35)',
+            }}
+          >
+            <Shield className="w-[18px] h-[18px] text-[#1A0317] stroke-[2.8]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold font-heading text-[#260623] text-xl tracking-tight leading-none">Verix</span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-300/50 text-[9.5px] font-mono font-bold uppercase tracking-wider shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
-                {t.activeProtection || 'ACTIVE PROTECTION'}
+              <span className="font-extrabold text-white text-[17px] tracking-tight leading-none" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                Verix
               </span>
+              {/* LIVE PILL */}
+              <div className="flex items-center gap-1 bg-emerald-500/20 border border-emerald-400/40 rounded-full px-2 py-[2px]">
+                <span className="w-[5px] h-[5px] rounded-full bg-emerald-400 animate-pulse block" />
+                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-mono">Live</span>
+              </div>
             </div>
-            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Real-Time Cyber Defense</span>
+            <span className="text-[10px] text-white/40 font-medium mt-0.5 block">Cyber Defense AI</span>
           </div>
         </div>
 
+        {/* Right Controls */}
         <div className="flex items-center gap-2">
-          {/* Quick Language Selector Pill */}
-          <div className="relative flex items-center bg-white border border-slate-200/80 rounded-full px-2.5 py-1.5 shadow-2xs">
-            <Globe className="w-3.5 h-3.5 text-[#380932] mr-1" />
-            <select
-              value={currentLang}
-              onChange={(e) => onLanguageChange && onLanguageChange(e.target.value)}
-              className="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer pr-1"
+          {/* Language Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen(v => !v)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-white/15 bg-white/8 backdrop-blur-md"
+              style={{ background: 'rgba(255,255,255,0.06)' }}
             >
-              {languages.map(l => (
-                <option key={l.code} value={l.code}>{l.label}</option>
-              ))}
-            </select>
+              <Globe className="w-3.5 h-3.5 text-white/60" />
+              <span className="text-[11px] font-bold text-white/80">{currentLangLabel}</span>
+            </button>
+            {langOpen && (
+              <div
+                className="absolute right-0 top-9 z-50 rounded-2xl border border-white/15 overflow-hidden"
+                style={{ background: 'rgba(30,10,38,0.97)', backdropFilter: 'blur(24px)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}
+              >
+                {languages.map(l => (
+                  <button
+                    key={l.code}
+                    onClick={() => { onLanguageChange && onLanguageChange(l.code); setLangOpen(false); }}
+                    className={`block w-full px-4 py-2.5 text-left text-xs font-semibold transition-colors ${currentLang === l.code ? 'text-[#D8F828] bg-[#D8F828]/10' : 'text-white/70 hover:text-white hover:bg-white/8'}`}
+                  >
+                    {l.label === 'EN' ? 'English' : l.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Settings Button */}
-          <button 
+          {/* Settings */}
+          <button
             onClick={() => onNavigate('settings')}
-            title="Settings & Profile"
-            className="w-9 h-9 rounded-full bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-700 flex items-center justify-center font-bold text-xs shadow-2xs active:scale-95 transition-all"
+            className="w-9 h-9 rounded-full flex items-center justify-center border border-white/15 transition-all active:scale-90"
+            style={{ background: 'rgba(255,255,255,0.06)' }}
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal className="w-4 h-4 text-white/70" />
           </button>
         </div>
       </div>
 
-      {/* ── 2. Hero Card: Deep Royal Plum with Radiant High-End CTA ── */}
-      <div className="bg-gradient-to-br from-[#380932] via-[#2A0525] to-[#180216] rounded-3xl p-5 text-white space-y-3.5 shadow-xl shadow-[#2A0525]/30 border border-white/10 relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#D8F828]/15 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="flex items-center justify-between">
-          <span className="text-[9.5px] font-mono font-bold tracking-wider text-[#D8F828] uppercase px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs inline-flex items-center gap-1.5">
-            ⚡ INSTANT THREAT INTERCEPTOR
-          </span>
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D8F828] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D8F828]"></span>
-          </span>
-        </div>
+      {/* ── HERO CARD ── */}
+      <div className="mx-4 mt-3 mb-4 rounded-[28px] overflow-hidden relative" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.45)' }}>
+        {/* Background */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(135deg, #3D0D46 0%, #2A0834 50%, #1A0428 100%)' }}
+        />
+        {/* Glow orbs */}
+        <div className="absolute -right-10 -top-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(216,248,40,0.12) 0%, transparent 70%)' }} />
+        <div className="absolute -left-10 bottom-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)' }} />
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(0deg, white 0px, white 1px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, white 0px, white 1px, transparent 1px, transparent 40px)' }} />
 
-        <div>
-          <h2 className="text-xl font-bold font-heading text-white tracking-tight leading-snug">
-            {t.runPreCheck || 'Run Pre-Payment Threat Check'}
+        <div className="relative p-5">
+          {/* Top Row */}
+          <div className="flex items-center justify-between mb-4">
+            <div
+              className="flex items-center gap-1.5 rounded-full px-3 py-1"
+              style={{ background: 'rgba(216,248,40,0.12)', border: '1px solid rgba(216,248,40,0.25)' }}
+            >
+              <Zap className="w-3 h-3 text-[#D8F828]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#D8F828] font-mono">
+                Instant Threat Interceptor
+              </span>
+            </div>
+            {/* Pulsing dot */}
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D8F828] opacity-60" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#D8F828]" />
+            </span>
+          </div>
+
+          {/* Title */}
+          <h2
+            className="text-[22px] font-black text-white leading-tight mb-1.5"
+            style={{ fontFamily: 'Outfit, sans-serif', letterSpacing: '-0.3px' }}
+          >
+            {t.runPreCheck || 'Run Pre-Payment\nThreat Check'}
           </h2>
-          <p className="text-xs text-white/75 mt-1 leading-relaxed font-normal">
-            {t.dashboardSubtitle || 'Real-time AI cyber defense against fraudulent VPAs, digital arrest, and extortion.'}
+          <p className="text-[12px] text-white/55 leading-relaxed mb-5 font-normal">
+            {t.dashboardSubtitle || 'Real-time AI defense against fraudulent VPAs, digital arrest & extortion.'}
           </p>
-        </div>
 
-        {/* ── World-Class Radiant Lime CTA Button ── */}
-        <button
-          onClick={() => onNavigate('upi-check')}
-          className="w-full h-[52px] min-h-[52px] bg-gradient-to-r from-[#D8F828] to-[#C4EB1A] hover:brightness-105 text-[#1A0317] rounded-2xl text-sm font-black flex items-center justify-center gap-2.5 shadow-[0_8px_20px_-4px_rgba(216,248,40,0.45)] active:scale-[0.98] transition-all duration-150 tracking-wide uppercase"
-        >
-          <Search className="w-4.5 h-4.5 text-[#1A0317] stroke-[2.8]" />
-          <span>{t.runPreCheck || 'Run Pre-Payment Threat Check'}</span>
-        </button>
+          {/* Stats Row */}
+          <div className="flex items-center gap-3 mb-5">
+            {[
+              { val: '99.2%', label: 'Accuracy' },
+              { val: '<2s', label: 'Response' },
+              { val: '50K+', label: 'Threats Blocked' },
+            ].map(s => (
+              <div key={s.label} className="flex-1 text-center">
+                <div className="text-[14px] font-black text-[#D8F828]" style={{ fontFamily: 'Outfit, sans-serif' }}>{s.val}</div>
+                <div className="text-[9px] text-white/40 uppercase tracking-wider font-mono">{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Button */}
+          <button
+            onClick={() => onNavigate('upi-check')}
+            className="w-full flex items-center justify-center gap-2.5 font-black text-[13px] uppercase tracking-wider rounded-[18px] active:scale-[0.97] transition-all duration-150"
+            style={{
+              height: '52px',
+              background: 'linear-gradient(135deg, #E4FF2E 0%, #C4E810 60%, #A8CC18 100%)',
+              boxShadow: '0 8px 24px rgba(216,248,40,0.4), 0 2px 8px rgba(216,248,40,0.2)',
+              color: '#1A0317',
+              fontFamily: 'Outfit, sans-serif',
+            }}
+          >
+            <Search className="w-[17px] h-[17px] stroke-[3]" />
+            {t.runPreCheck || 'Run Pre-Payment Threat Check'}
+          </button>
+        </div>
       </div>
 
-      {/* ── 3. Feature Cards: High-End White Cards with Gradient Icon Badges ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        {/* Card 1: Scan UPI QR Code */}
-        <button
-          onClick={() => onNavigate('home', { openQr: true })}
-          className="group relative p-4.5 rounded-3xl bg-white border border-slate-200/70 hover:border-emerald-300 text-left flex flex-col justify-between space-y-3.5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-md active:scale-[0.98] transition-all overflow-hidden"
-        >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-800 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
-              <QrCode className="w-6 h-6 stroke-[2.2]" />
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
-              Instant Scan
-            </span>
-          </div>
+      {/* ── FEATURE CARDS ── */}
+      <div className="px-4 space-y-3 pb-6">
+        <div className="grid grid-cols-2 gap-3">
+          {/* QR Scan Card */}
+          <button
+            onClick={() => onNavigate('home', { openQr: true })}
+            className="group relative rounded-[24px] p-4 text-left overflow-hidden active:scale-[0.96] transition-all duration-150"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            }}
+          >
+            {/* Hover gradient overlay */}
+            <div className="absolute inset-0 rounded-[24px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(20,180,120,0.15) 0%, rgba(16,160,100,0.05) 100%)' }} />
 
-          <div>
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold font-heading text-slate-900 group-hover:text-[#260623] transition-colors">
-                {t.scanQr || 'Scan UPI QR'}
-              </h4>
-              <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-700 group-hover:bg-slate-100 transition-all">
-                <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            {/* Icon */}
+            <div
+              className="w-11 h-11 rounded-[16px] flex items-center justify-center mb-3 relative"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(5,150,105,0.15) 100%)',
+                border: '1px solid rgba(16,185,129,0.3)',
+              }}
+            >
+              <QrCode className="w-6 h-6 text-emerald-400 stroke-[2]" />
+            </div>
+
+            {/* Badge */}
+            <div className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 mb-2" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)' }}>
+              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 font-mono">Instant Scan</span>
+            </div>
+
+            <h4 className="text-[13px] font-bold text-white leading-snug" style={{ fontFamily: 'Outfit, sans-serif' }}>
+              {t.scanQr || 'Scan UPI QR'}
+            </h4>
+            <p className="text-[10.5px] text-white/40 mt-1 leading-relaxed">
+              Verify merchants against cybercrime registries.
+            </p>
+
+            <div className="flex justify-end mt-3">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <ChevronRight className="w-3.5 h-3.5 text-white/50 stroke-[2.5]" />
               </div>
             </div>
-            <p className="text-[11.5px] text-slate-500 font-normal mt-1 leading-relaxed">
-              Scan & verify any merchant or personal QR code against national cybercrime registries.
-            </p>
-          </div>
-        </button>
+          </button>
 
-        {/* Card 2: AI Voice & Audio Scan */}
-        <button
-          onClick={() => onNavigate('audio-analyzer')}
-          className="group relative p-4.5 rounded-3xl bg-white border border-slate-200/70 hover:border-rose-300 text-left flex flex-col justify-between space-y-3.5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-md active:scale-[0.98] transition-all overflow-hidden"
-        >
-          <div className="flex items-center justify-between w-full">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-50 text-rose-700 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
-              <Mic className="w-6 h-6 stroke-[2.2]" />
+          {/* AI Audio Scan Card */}
+          <button
+            onClick={() => onNavigate('audio-analyzer')}
+            className="group relative rounded-[24px] p-4 text-left overflow-hidden active:scale-[0.96] transition-all duration-150"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div className="absolute inset-0 rounded-[24px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.15) 0%, rgba(220,38,38,0.05) 100%)' }} />
+
+            <div
+              className="w-11 h-11 rounded-[16px] flex items-center justify-center mb-3"
+              style={{
+                background: 'linear-gradient(135deg, rgba(244,63,94,0.25) 0%, rgba(220,38,38,0.15) 100%)',
+                border: '1px solid rgba(244,63,94,0.3)',
+              }}
+            >
+              <Mic className="w-6 h-6 text-rose-400 stroke-[2]" />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/60">
-              Coercion AI
-            </span>
-          </div>
 
-          <div>
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold font-heading text-slate-900 group-hover:text-[#260623] transition-colors">
-                {t.audioScan || 'AI Audio Scan'}
-              </h4>
-              <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-700 group-hover:bg-slate-100 transition-all">
-                <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+            <div className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 mb-2" style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.3)' }}>
+              <span className="text-[9px] font-black uppercase tracking-wider text-rose-400 font-mono">Coercion AI</span>
+            </div>
+
+            <h4 className="text-[13px] font-bold text-white leading-snug" style={{ fontFamily: 'Outfit, sans-serif' }}>
+              {t.audioScan || 'AI Audio Scan'}
+            </h4>
+            <p className="text-[10.5px] text-white/40 mt-1 leading-relaxed">
+              Detect digital arrest &amp; police coercion.
+            </p>
+
+            <div className="flex justify-end mt-3">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <ChevronRight className="w-3.5 h-3.5 text-white/50 stroke-[2.5]" />
               </div>
             </div>
-            <p className="text-[11.5px] text-slate-500 font-normal mt-1 leading-relaxed">
-              Record 30s of call audio to detect digital arrest threats, fake police pressure & coercion.
-            </p>
-          </div>
-        </button>
-      </div>
+          </button>
+        </div>
 
-      {/* ── 4. Action Card: Live Scam Call Simulation (Refined Rose-Coral) ── */}
-      <div className="bg-white rounded-3xl p-4 border border-slate-200/70 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-100 to-red-50 text-rose-600 flex items-center justify-center shadow-xs shrink-0">
-            <PhoneCall className="w-5 h-5 stroke-[2.2]" />
+        {/* ── Simulate Call Banner ── */}
+        <div
+          className="rounded-[24px] p-4 flex items-center gap-3 relative overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(20px)',
+          }}
+        >
+          <div className="absolute -right-8 -bottom-8 w-28 h-28 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(244,63,94,0.12) 0%, transparent 70%)' }} />
+
+          <div
+            className="w-11 h-11 rounded-[16px] flex items-center justify-center shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, rgba(244,63,94,0.25) 0%, rgba(190,18,60,0.2) 100%)',
+              border: '1px solid rgba(244,63,94,0.3)',
+            }}
+          >
+            <PhoneCall className="w-5 h-5 text-rose-400 stroke-[2]" />
           </div>
-          <div>
-            <h4 className="text-xs font-bold text-slate-900 font-heading">Test Scam Call Simulation</h4>
-            <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">Test Verix In-Call Defense & Floating Overlay</p>
+
+          <div className="flex-1 min-w-0">
+            <h4 className="text-[12.5px] font-bold text-white leading-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>
+              Test Scam Call Simulation
+            </h4>
+            <p className="text-[10px] text-white/40 mt-0.5">Test Verix In-Call Defense &amp; Floating Overlay</p>
+          </div>
+
+          <button
+            onClick={() => onTriggerCallSimulation && onTriggerCallSimulation('+919876543210')}
+            className="shrink-0 px-3.5 py-2 rounded-[14px] text-[11.5px] font-black text-white tracking-wide active:scale-95 transition-all"
+            style={{
+              background: 'linear-gradient(135deg, #E8546B 0%, #C92040 100%)',
+              boxShadow: '0 4px 16px rgba(232,84,107,0.4)',
+              fontFamily: 'Outfit, sans-serif',
+            }}
+          >
+            Simulate
+          </button>
+        </div>
+
+        {/* ── Threat Status Widget ── */}
+        <div
+          className="rounded-[24px] p-4 flex items-center gap-4"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.09)',
+          }}
+        >
+          <div className="flex-1">
+            <div className="flex items-center gap-1.5 mb-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 font-mono">System Status</span>
+            </div>
+            <h5 className="text-[12px] font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>All Systems Operational</h5>
+            <p className="text-[10px] text-white/35 mt-0.5">AI models • UPI Registry • Audio Engine</p>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <div className="text-[22px] font-black text-[#D8F828]" style={{ fontFamily: 'Outfit, sans-serif', lineHeight: 1 }}>
+              0
+            </div>
+            <div className="text-[9px] text-white/35 uppercase font-mono tracking-wider">Active Threats</div>
           </div>
         </div>
-        <button
-          onClick={() => onTriggerCallSimulation && onTriggerCallSimulation('+919876543210')}
-          className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold shadow-[0_4px_12px_rgba(225,29,72,0.25)] active:scale-95 transition-all shrink-0 tracking-wide"
-        >
-          Simulate Call
-        </button>
       </div>
     </div>
   );
 }
-
