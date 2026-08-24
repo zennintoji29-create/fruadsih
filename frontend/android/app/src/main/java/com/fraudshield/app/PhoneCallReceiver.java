@@ -162,6 +162,9 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                     context.startService(updateIntent);
                 }
             } catch (Exception e) {
+                Log.e(TAG, "Error updating overlay: " + e.getMessage());
+            }
+
             // Also display High-Priority Heads-Up Notification
             showHeadsUpNotification(context, callerNumber, callerBadge, warning, isScam);
         }).start();
