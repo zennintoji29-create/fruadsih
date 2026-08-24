@@ -152,24 +152,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
             </p>
           </div>
 
-          {/* Stat Metrics Row */}
-          <div 
-            className="grid grid-cols-3 gap-2 py-2 px-3 rounded-[16px] mb-4 relative z-10"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            <div className="text-center">
-              <span className="text-[13px] font-black text-[#D8F828] font-mono block">99.2%</span>
-              <span className="text-[9px] text-white/45 uppercase tracking-wider block font-medium">Accuracy</span>
-            </div>
-            <div className="text-center border-x border-white/10">
-              <span className="text-[13px] font-black text-white font-mono block">&lt;2s</span>
-              <span className="text-[9px] text-white/45 uppercase tracking-wider block font-medium">Response</span>
-            </div>
-            <div className="text-center">
-              <span className="text-[13px] font-black text-[#D8F828] font-mono block">50K+</span>
-              <span className="text-[9px] text-white/45 uppercase tracking-wider block font-medium">Blocked</span>
-            </div>
-          </div>
+
 
           {/* PROMINENT LIME CTA BUTTON (FIXED HEIGHT & SOLID CLICK TARGET) */}
           <button
