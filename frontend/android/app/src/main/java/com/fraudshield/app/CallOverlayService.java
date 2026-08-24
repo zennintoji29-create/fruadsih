@@ -49,11 +49,13 @@ public class CallOverlayService extends Service {
             if (badge == null || badge.isEmpty()) badge = "Suspected Voice Phishing / Digital Arrest";
             if (warning == null || warning.isEmpty()) warning = "Scammer demanding fund transfer under police threat";
 
+            boolean isScam = intent.getBooleanExtra("IS_SCAM", false);
+
             if (ACTION_SHOW_OVERLAY.equals(action)) {
                 // 1. Establish Foreground Service first (mandatory on Android 8+ within 5s)
                 showOngoingInCallNotification(number, badge, warning, false);
                 // 2. Display Floating HUD View
-                showFloatingOverlay(number, badge, warning);
+                showFloatingOverlay(number, badge, warning, isScam);
             } else if (ACTION_CALL_OFFHOOK.equals(action)) {
                 showOngoingInCallNotification(number, badge, warning, true);
             } else if (ACTION_HIDE_OVERLAY.equals(action)) {
@@ -70,7 +72,7 @@ public class CallOverlayService extends Service {
         return START_NOT_STICKY;
     }
 
-    private void showFloatingOverlay(String number, String badge, String warning) {
+    private void showFloatingOverlay(String number, String badge, String warning, boolean isScam) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             Log.w(TAG, "Overlay permission not granted according to Settings.canDrawOverlays");
             return;
@@ -91,11 +93,11 @@ public class CallOverlayService extends Service {
             layout.setPadding(36, 28, 36, 28);
             layout.setGravity(Gravity.CENTER_HORIZONTAL);
 
-            // Dark Cyber Gradient Background with Red Border
+            // Dark Cyber Gradient Background with Red or Green Border
             GradientDrawable bg = new GradientDrawable();
             bg.setColor(Color.parseColor("#EE0B0F19")); // Dark Glass
             bg.setCornerRadius(28);
-            bg.setStroke(3, Color.parseColor("#EF4444")); // Red Cyber Border
+            bg.setStroke(3, Color.parseColor(isScam ? "#EF4444" : "#00F0A0")); // Red if scam, Emerald if safe
             layout.setBackground(bg);
 
             // Header Row
@@ -108,8 +110,8 @@ public class CallOverlayService extends Service {
             ));
 
             TextView title = new TextView(this);
-            title.setText("🛡️ VERIX CALL SENTINEL");
-            title.setTextColor(Color.parseColor("#EF4444"));
+            title.setText(isScam ? "🚨 SCAM CALL DETECTED" : "🛡️ VERIX CALL SENTINEL");
+            title.setTextColor(Color.parseColor(isScam ? "#EF4444" : "#00F0A0"));
             title.setTextSize(13);
             title.setTypeface(null, android.graphics.Typeface.BOLD);
             LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
@@ -128,7 +130,7 @@ public class CallOverlayService extends Service {
 
             // Caller Info
             TextView callerTxt = new TextView(this);
-            callerTxt.setText("🚨 " + number);
+            callerTxt.setText((isScam ? "⚠️ " : "📞 ") + number);
             callerTxt.setTextColor(Color.WHITE);
             callerTxt.setTextSize(16);
             callerTxt.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -137,7 +139,7 @@ public class CallOverlayService extends Service {
 
             TextView badgeTxt = new TextView(this);
             badgeTxt.setText(badge);
-            badgeTxt.setTextColor(Color.parseColor("#FCA5A5"));
+            badgeTxt.setTextColor(Color.parseColor(isScam ? "#FCA5A5" : "#A7F3D0"));
             badgeTxt.setTextSize(12);
             badgeTxt.setPadding(0, 0, 0, 12);
             layout.addView(badgeTxt);

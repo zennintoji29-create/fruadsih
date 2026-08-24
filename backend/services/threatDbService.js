@@ -51,13 +51,15 @@ export class ThreatDbService {
       return formatted;
     }
 
-    // 3. Normalized phone lookup (+91 format)
+    // 3. Normalized phone lookup (Exact 10-digit match for Indian/Intl numbers)
     const cleanPhone = identifier.replace(/[^0-9]/g, '');
-    if (cleanPhone && cleanPhone.length >= 7) {
+    if (cleanPhone && cleanPhone.length >= 10) {
+      const last10Input = cleanPhone.slice(-10);
       for (const [key, record] of db.threatRegistry.entries()) {
         if (record.type === 'PHONE') {
           const recordClean = key.replace(/[^0-9]/g, '');
-          if (recordClean.endsWith(cleanPhone) || cleanPhone.endsWith(recordClean)) {
+          const last10Record = recordClean.slice(-10);
+          if (last10Record.length === 10 && last10Input === last10Record) {
             return record;
           }
         }

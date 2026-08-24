@@ -39,24 +39,29 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                     incomingNumber = getLatestIncomingNumber(context);
                 }
                 if (incomingNumber == null || incomingNumber.isEmpty()) {
-                    incomingNumber = "+91 94775 30475";
+                    incomingNumber = "Incoming Call";
                 }
                 lastCallerNumber = incomingNumber;
                 Log.d(TAG, "Incoming Call Detected: " + incomingNumber);
-                checkCallerAndNotify(context, incomingNumber);
 
+                // Initial Safe Sentinel State while checking database
                 Intent serviceIntent = new Intent(context, CallOverlayService.class);
                 serviceIntent.setAction(CallOverlayService.ACTION_SHOW_OVERLAY);
                 serviceIntent.putExtra("CALLER_NUMBER", incomingNumber);
-                serviceIntent.putExtra("CALLER_BADGE", "Suspected Voice Phishing / Digital Arrest");
-                serviceIntent.putExtra("CALLER_WARNING", "Tap to scan speech for coercion & fake police threats");
+                serviceIntent.putExtra("CALLER_BADGE", "Verix Active Shield • In-Call Sentinel");
+                serviceIntent.putExtra("CALLER_WARNING", "Scanning number against I4C Cybercrime registry...");
+                serviceIntent.putExtra("IS_SCAM", false);
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(serviceIntent);
                 } else {
                     context.startService(serviceIntent);
                 }
+
+                // Query backend threat database asynchronously
+                checkCallerAndNotify(context, incomingNumber);
             } else if (TelephonyManager.EXTRA_STATE_OFFHOOK.equals(state)) {
-                // Call accepted by user — start persistent in-call sentinel
+                // Call accepted by user — start persistent in-call speech sentinel
                 Intent serviceIntent = new Intent(context, CallOverlayService.class);
                 serviceIntent.setAction(CallOverlayService.ACTION_CALL_OFFHOOK);
                 serviceIntent.putExtra("CALLER_NUMBER", lastCallerNumber);
@@ -104,17 +109,18 @@ public class PhoneCallReceiver extends BroadcastReceiver {
 
     private void checkCallerAndNotify(Context context, String callerNumber) {
         new Thread(() -> {
-            boolean isScam = true; // Default to safety alert
-            String callerBadge = "Suspected Voice Phishing / Extortionist";
-            String warning = "Flagged in I4C & Sanchar Saathi National Scam Registry";
+            boolean isScam = false; // Clean default until verified by DB
+            String callerBadge = "Verified / Normal Caller";
+            String warning = "No cybercrime reports found for this number";
+            int riskScore = 5;
 
             try {
                 String encodedNumber = URLEncoder.encode(callerNumber, "UTF-8");
                 URL url = new URL("https://fruadsih.onrender.com/api/v1/voice-phish/screen-call?callerNumber=" + encodedNumber);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                conn.setConnectTimeout(4000);
-                conn.setReadTimeout(4000);
+                conn.setConnectTimeout(3500);
+                conn.setReadTimeout(3500);
 
                 if (conn.getResponseCode() == 200) {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -129,9 +135,10 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                     if (json.optBoolean("success", false)) {
                         JSONObject data = json.optJSONObject("data");
                         if (data != null) {
-                            isScam = data.optBoolean("isSpam", true);
-                            callerBadge = data.optString("callerBadge", callerBadge);
-                            warning = data.optString("warningTitle", warning);
+                            isScam = data.optBoolean("isSpam", false);
+                            callerBadge = data.optString("callerBadge", isScam ? "Flagged Scam Caller" : "Verified / Normal Caller");
+                            warning = data.optString("warningTitle", isScam ? "⚠️ SCAM ALERT: Extortion Pattern" : "Verified / Normal Call");
+                            riskScore = data.optInt("riskScore", 5);
                         }
                     }
                 }
@@ -139,11 +146,28 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                 Log.w(TAG, "Could not fetch online reputation, using local heuristics: " + e.getMessage());
             }
 
-            showHeadsUpNotification(context, callerNumber, callerBadge, warning);
+            // Broadcast updated verdict to CallOverlayService
+            Intent updateIntent = new Intent(context, CallOverlayService.class);
+            updateIntent.setAction(CallOverlayService.ACTION_SHOW_OVERLAY);
+            updateIntent.putExtra("CALLER_NUMBER", callerNumber);
+            updateIntent.putExtra("CALLER_BADGE", callerBadge);
+            updateIntent.putExtra("CALLER_WARNING", warning);
+            updateIntent.putExtra("IS_SCAM", isScam);
+            updateIntent.putExtra("RISK_SCORE", riskScore);
+
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(updateIntent);
+                } else {
+                    context.startService(updateIntent);
+                }
+            } catch (Exception e) {
+            // Also display High-Priority Heads-Up Notification
+            showHeadsUpNotification(context, callerNumber, callerBadge, warning, isScam);
         }).start();
     }
 
-    private void showHeadsUpNotification(Context context, String number, String badge, String warning) {
+    private void showHeadsUpNotification(Context context, String number, String badge, String warning, boolean isScam) {
         try {
             NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm == null) return;
@@ -165,6 +189,7 @@ public class PhoneCallReceiver extends BroadcastReceiver {
             Intent launchIntent = new Intent(context, MainActivity.class);
             launchIntent.setAction("com.fraudshield.app.INCOMING_CALL_SCREENING");
             launchIntent.putExtra("CALLER_NUMBER", number);
+            launchIntent.putExtra("IS_SCAM", isScam);
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
             PendingIntent pi = PendingIntent.getActivity(
@@ -176,15 +201,19 @@ public class PhoneCallReceiver extends BroadcastReceiver {
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setContentTitle("🚨 SCAM CALL DETECTED: " + number)
-                .setContentText(badge + " • Tap to Record & Block")
-                .setStyle(new NotificationCompat.BigTextStyle().bigText("⚠️ " + warning + "\nTap here to launch Verix In-Call Defense HUD & Scan Speech in Real Time."))
+                .setContentTitle(isScam ? "🚨 SCAM CALL DETECTED: " + number : "🛡️ Verix Protected Call: " + number)
+                .setContentText(isScam ? badge + " • Tap to Record & Block" : "Clean / Unflagged • Tap to Open Speech Sentinel")
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(
+                    isScam 
+                        ? "⚠️ " + warning + "\nTap here to launch Verix In-Call Defense HUD & Scan Speech in Real Time."
+                        : "✓ " + warning + "\nVerix is monitoring for extortion and coercive intent in real-time."
+                ))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setFullScreenIntent(pi, true) // Force Heads-Up overlay on top of dialer
+                .setFullScreenIntent(pi, isScam) // Force Heads-Up overlay on top of dialer if scam
                 .setContentIntent(pi)
-                .addAction(android.R.drawable.ic_btn_speak_now, "🔴 Scan Speech (30s)", pi)
+                .addAction(android.R.drawable.ic_btn_speak_now, "🎙️ Scan Speech (30s)", pi)
                 .setAutoCancel(true);
 
             nm.notify(9001, builder.build());
