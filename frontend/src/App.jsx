@@ -298,50 +298,46 @@ export default function App() {
   const renderBottomNav = () => {
     if (!currentUser || needsPermissionsOnboarding) return null;
     return (
-      <div
-        className="shrink-0 w-full max-w-md mx-auto z-30 flex items-stretch"
+      <nav
+        className="shrink-0 w-full max-w-md mx-auto z-30 flex items-center justify-around bg-[#0B0E14] border-t border-white/[0.08]"
         style={{
-          background: 'rgba(18,5,26,0.95)',
-          backdropFilter: 'blur(24px)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
           paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
         }}
       >
         {[
           { id: 'home', icon: HomeIcon, label: t.navHome || 'Home' },
-          { id: 'payments', icon: CreditCard, label: t.navPayments || 'Pay', extraIds: ['upi-check', 'analysis'] },
-          { id: 'history', icon: History, label: t.navHistory || 'History', extraIds: ['alerts'] },
-          { id: 'settings', icon: SlidersHorizontal, label: t.navSettings || 'Settings' },
+          { id: 'payments', icon: CreditCard, label: t.navPayments || 'Pay Shield', extraIds: ['upi-check', 'analysis'] },
+          { id: 'history', icon: History, label: t.navHistory || 'Logs', extraIds: ['alerts'] },
+          { id: 'settings', icon: SlidersHorizontal, label: t.navSettings || 'Config' },
         ].map(({ id, icon: Icon, label, extraIds = [] }) => {
           const isActive = currentScreen === id || extraIds.includes(currentScreen);
           return (
             <button
               key={id}
               onClick={() => setCurrentScreen(id)}
-              className="flex-1 flex flex-col items-center justify-center pt-3 pb-1 gap-1 transition-all active:scale-90"
+              className="flex-1 flex flex-col items-center justify-center pt-2.5 pb-1 gap-1 transition-all active:scale-95 group"
             >
-              <div
-                className="w-10 h-8 rounded-[14px] flex items-center justify-center transition-all"
-                style={isActive ? {
-                  background: 'linear-gradient(135deg, rgba(216,248,40,0.2) 0%, rgba(196,235,26,0.1) 100%)',
-                  border: '1px solid rgba(216,248,40,0.3)',
-                } : {}}
-              >
+              <div className="relative flex items-center justify-center">
                 <Icon
-                  className={`w-[18px] h-[18px] stroke-[2] transition-colors ${isActive ? 'text-[#D8F828]' : 'text-white/30'}`}
+                  className={`w-5 h-5 stroke-[2] transition-colors ${
+                    isActive ? 'text-[#00F0A0]' : 'text-[#617184] group-hover:text-[#94A3B8]'
+                  }`}
                 />
+                {isActive && (
+                  <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-[#00F0A0]" />
+                )}
               </div>
               <span
-                className={`text-[10px] font-semibold transition-colors ${isActive ? 'text-[#D8F828]' : 'text-white/25'}`}
-                style={{ fontFamily: 'Outfit, sans-serif' }}
+                className={`text-[9.5px] font-mono tracking-tight transition-colors ${
+                  isActive ? 'text-white font-bold' : 'text-[#617184]'
+                }`}
               >
                 {label}
               </span>
             </button>
           );
         })}
-      </div>
+      </nav>
     );
   };
 
@@ -381,7 +377,7 @@ export default function App() {
   // NATIVE ANDROID / MOBILE FULL-SCREEN RENDERING
   if (isMobileDevice) {
     return (
-      <div className="h-[100dvh] w-full max-w-md mx-auto flex flex-col overflow-hidden font-sans select-none shadow-2xl relative" style={{ background: 'linear-gradient(160deg, #1B0A22 0%, #23072D 40%, #150520 75%, #0D0215 100%)' }}>
+      <div className="h-[100dvh] w-full max-w-md mx-auto flex flex-col overflow-hidden font-sans select-none bg-[#090C10] shadow-2xl relative">
         <div className="flex-1 overflow-y-auto relative flex flex-col">
           {renderScreenContent()}
           {showCallSimulation && (
