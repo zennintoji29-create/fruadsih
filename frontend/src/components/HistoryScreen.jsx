@@ -125,18 +125,85 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
     }
   ]);
 
-  // Load custom tickets or pre-checks from localStorage if saved
-  useEffect(() => {
+  const [loading, setLoading] = useState(false);
+
+  // Fetch real-time live appeals & risk history from Backend
+  const fetchLiveHistory = async () => {
+    setLoading(true);
     try {
-      const savedTickets = localStorage.getItem('shieldx_tickets_history');
-      if (savedTickets) {
-        const parsed = JSON.parse(savedTickets);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAdminTickets(prev => [...parsed, ...prev.filter(p => !parsed.some(x => x.id === p.id))]);
+      if (backendUrl) {
+        // 1. Fetch Appeals / Review Tickets
+        const appealRes = await fetch(`${backendUrl}/api/v1/institution/appeals`, { cache: 'no-store' });
+        if (appealRes.ok) {
+          const appealData = await appealRes.json();
+          if (appealData.appeals && Array.isArray(appealData.appeals) && appealData.appeals.length > 0) {
+            const formatted = appealData.appeals.map(a => {
+              const isApproved = a.status === 'APPROVED_WHITELISTED' || a.status === 'APPROVED';
+              const isRejected = a.status === 'REJECTED';
+              return {
+                id: a.appealId || a.id,
+                vpa: a.vpa || 'Unknown VPA',
+                submittedAt: a.submittedAt ? new Date(a.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+                status: a.status,
+                statusLabel: isApproved ? 'Clearance Granted • Safe to Pay' : (isRejected ? 'Confirmed Scam • Blocked' : 'Pending Compliance Review'),
+                statusColor: isApproved 
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                  : (isRejected ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-amber-100 text-amber-800 border-amber-200'),
+                adminNote: a.reviewerNotes || (isApproved 
+                  ? 'Verified legitimate payee after manual KYC inspection. Clearance token issued.' 
+                  : (isRejected ? 'Bank compliance desk confirmed suspicious extortion patterns. Payee blacklisted.' : 'Ticket received by Verix Fraud Review Desk. Surveillance agent analyzing transaction telemetry.'))
+              };
+            });
+            setAdminTickets(prev => {
+              const combined = [...formatted, ...prev.filter(p => !formatted.some(f => f.id === p.id))];
+              return combined;
+            });
+          }
+        }
+
+        // 2. Fetch Risk Audit Logs
+        const riskRes = await fetch(`${backendUrl}/api/v1/risk/history`, { cache: 'no-store' }).catch(() => null);
+        if (riskRes && riskRes.ok) {
+          const riskData = await riskRes.json();
+          if (riskData.transactions && Array.isArray(riskData.transactions) && riskData.transactions.length > 0) {
+            const formattedRisk = riskData.transactions.map(t => ({
+              id: t.assessmentId || `tx-${Date.now()}`,
+              vpa: t.vpa,
+              payee: t.vpa.split('@')[0] || 'UPI Payee',
+              amount: `₹${(t.amount || 0).toLocaleString('en-IN')}`,
+              riskScore: t.riskScore || 0,
+              riskLevel: t.riskLevel || (t.riskScore >= 70 ? 'HIGH_RISK' : 'SAFE'),
+              timestamp: t.timestamp ? new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+              note: t.note || 'UPI Pre-Payment Scan',
+              reason: t.isBlocked ? 'Blocked by Verix Pre-Payment Circuit Breaker' : 'Verified clean recipient handle.'
+            }));
+            setPreCheckHistory(prev => {
+              const combined = [...formattedRisk, ...prev.filter(p => !formattedRisk.some(f => f.vpa === p.vpa && f.id === p.id))];
+              return combined;
+            });
+          }
         }
       }
-    } catch (e) {}
-  }, []);
+    } catch (e) {
+      console.warn('[History Sync Notice]:', e.message);
+    } finally {
+      // Also load local tickets
+      try {
+        const savedTickets = localStorage.getItem('shieldx_tickets_history');
+        if (savedTickets) {
+          const parsed = JSON.parse(savedTickets);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setAdminTickets(prev => [...parsed.filter(p => !prev.some(x => x.id === p.id)), ...prev]);
+          }
+        }
+      } catch (e) {}
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveHistory();
+  }, [backendUrl]);
 
   const handleBlock = (id, identifier) => {
     if (!blockedItems.includes(id)) {
@@ -207,16 +274,25 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
         </p>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by VPA, phone number, or ticket ID..."
-          className="w-full bg-white border border-[#e5ebc5] rounded-2xl py-2.5 pl-10 pr-4 text-xs text-[#1e112a] focus:outline-none focus:border-[#450c3f] shadow-2xs"
-        />
+      {/* Search Bar & Live Sync Button */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by VPA, phone number, or ticket ID..."
+            className="w-full bg-white border border-[#e5ebc5] rounded-2xl py-2.5 pl-10 pr-4 text-xs text-[#1e112a] focus:outline-none focus:border-[#450c3f] shadow-2xs"
+          />
+        </div>
+        <button
+          onClick={fetchLiveHistory}
+          title="Refresh History from Live Backend"
+          className="p-2.5 rounded-2xl bg-white border border-[#e5ebc5] hover:bg-[#d9efbd] text-[#450c3f] shadow-2xs active:scale-95 transition-all"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       {/* 3-Way Segmented Tabs: Pre-Checks | Call Logs | Admin Tickets */}
