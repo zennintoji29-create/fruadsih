@@ -12,6 +12,7 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
   const [searchQuery, setSearchQuery] = useState('');
   const [blockedItems, setBlockedItems] = useState([]);
   const [reportedItems, setReportedItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Report Modal State
   const [reportingItem, setReportingItem] = useState(null);
@@ -73,7 +74,7 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
       identifier: '+91 94775 30475',
       timestamp: 'Today, 10:42 AM • Incoming Call Flagged',
       badge: 'Digital Arrest Scam',
-      badgeColor: 'bg-rose-600 text-white',
+      badgeColor: 'bg-rose-500/20 text-rose-300 border border-rose-500/30',
       summary: 'Caller impersonated CBI Officer demanding ₹25,000 security clearance for fake arrest warrant.'
     },
     {
@@ -81,7 +82,7 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
       identifier: '+91 88776 65544',
       timestamp: 'Yesterday, 4:20 PM • Robocall Intercepted',
       badge: 'Courier KYC Extortion',
-      badgeColor: 'bg-amber-600 text-white',
+      badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
       summary: 'Automated IVR claimed an illegal parcel was intercepted at Mumbai customs requiring immediate verification payment.'
     },
     {
@@ -89,7 +90,7 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
       identifier: '+91 98200 12345',
       timestamp: '3 days ago • Voice Coercion Scan',
       badge: 'Voice Phishing Intercepted',
-      badgeColor: 'bg-rose-600 text-white',
+      badgeColor: 'bg-rose-500/20 text-rose-300 border border-rose-500/30',
       summary: '30s Speech Scan detected 94% coercion pattern with synthetic background police sirens.'
     }
   ];
@@ -99,56 +100,50 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
     {
       id: 'VRX-REV-849201',
       vpa: 'scammer.cybercell@oksbi',
+      amount: '25000',
+      note: 'Demanded for Digital Arrest Bail clearance',
       submittedAt: 'Today, 10:48 AM',
-      status: 'VERIFIED_MALICIOUS',
-      statusLabel: 'Confirmed Scam • Blocked',
-      statusColor: 'bg-rose-100 text-rose-800 border-rose-200',
-      adminNote: 'Bank Admin Surveillance confirmed VPA is linked to known extortion ring in Cambodia/Mewat. Account freeze initiated with 1930 Cyber Cell.'
+      status: 'REJECTED',
+      statusLabel: 'Transfer Blocked by Compliance',
+      statusColor: 'bg-rose-500/20 text-rose-300 border border-rose-500/30',
+      adminNote: 'Bank compliance review desk confirmed extortion threat patterns. Recipient VPA blacklisted.'
     },
     {
-      id: 'VRX-REV-391024',
-      vpa: 'hostel.mess.fees@sbi',
-      submittedAt: 'Yesterday, 1:20 PM',
-      status: 'APPROVED_CLEARANCE',
-      statusLabel: 'Clearance Granted',
-      statusColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      adminNote: 'Verified genuine institutional payee after manual KYC inspection. 24-hour white-listing bypass token issued.'
-    },
-    {
-      id: 'VRX-REV-671932',
-      vpa: 'quick.electricity.bill@axis',
-      submittedAt: '3 days ago',
-      status: 'BLOCKED_FRAUD',
-      statusLabel: 'Threat Confirmed',
-      statusColor: 'bg-rose-100 text-rose-800 border-rose-200',
-      adminNote: 'Reported to I4C portal. VPA blocked across state banking grid.'
+      id: 'VRX-REV-104928',
+      vpa: 'landlord.rent@icici',
+      amount: '18000',
+      note: 'Monthly House Rent Transfer',
+      submittedAt: 'Yesterday, 6:30 PM',
+      status: 'APPROVED',
+      statusLabel: 'Cleared & Whitelisted',
+      statusColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+      adminNote: 'Verified legitimate landlord account after KYC verification. Token generated.'
     }
   ]);
 
-  const [loading, setLoading] = useState(false);
-
-  // Fetch real-time live appeals & risk history from Backend
   const fetchLiveHistory = async () => {
     setLoading(true);
     try {
       if (backendUrl) {
-        // 1. Fetch Appeals / Review Tickets
-        const appealRes = await fetch(`${backendUrl}/api/v1/institution/appeals`, { cache: 'no-store' });
-        if (appealRes.ok) {
-          const appealData = await appealRes.json();
-          if (appealData.appeals && Array.isArray(appealData.appeals) && appealData.appeals.length > 0) {
-            const formatted = appealData.appeals.map(a => {
+        // 1. Fetch Appeals from Bank Portal
+        const appealsRes = await fetch(`${backendUrl}/api/v1/institution/appeals`, { cache: 'no-store' }).catch(() => null);
+        if (appealsRes && appealsRes.ok) {
+          const appealsData = await appealsRes.json();
+          if (appealsData.appeals && Array.isArray(appealsData.appeals) && appealsData.appeals.length > 0) {
+            const formatted = appealsData.appeals.map(a => {
               const isApproved = a.status === 'APPROVED_WHITELISTED' || a.status === 'APPROVED';
               const isRejected = a.status === 'REJECTED';
               return {
-                id: a.appealId || a.id,
-                vpa: a.vpa || 'Unknown VPA',
-                submittedAt: a.submittedAt ? new Date(a.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+                id: a.ticketId,
+                vpa: a.vpa,
+                amount: a.amount,
+                note: a.note,
+                submittedAt: a.createdAt ? new Date(a.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
                 status: a.status,
-                statusLabel: isApproved ? 'Clearance Granted • Safe to Pay' : (isRejected ? 'Confirmed Scam • Blocked' : 'Pending Compliance Review'),
+                statusLabel: isApproved ? 'Cleared & Whitelisted' : (isRejected ? 'Transfer Blocked by Compliance' : 'Pending Admin Review'),
                 statusColor: isApproved 
-                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
-                  : (isRejected ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-amber-100 text-amber-800 border-amber-200'),
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                  : (isRejected ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'),
                 adminNote: a.reviewerNotes || (isApproved 
                   ? 'Verified legitimate payee after manual KYC inspection. Clearance token issued.' 
                   : (isRejected ? 'Bank compliance desk confirmed suspicious extortion patterns. Payee blacklisted.' : 'Ticket received by Verix Fraud Review Desk. Surveillance agent analyzing transaction telemetry.'))
@@ -243,33 +238,40 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
     }
   };
 
+  const darkBg = { background: 'linear-gradient(160deg, #1B0A22 0%, #23072D 40%, #150520 75%, #0D0215 100%)' };
+  const glassCard = {
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    backdropFilter: 'blur(20px)'
+  };
+
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#f5fbda] text-[#1e112a] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-28 space-y-4 font-sans selection:bg-[#450c3f] selection:text-white">
+    <div className="flex flex-col min-h-full w-full overflow-y-auto px-4 pt-4 pb-28 space-y-4 font-sans select-none" style={darkBg}>
       {/* Top Header */}
       <div className="flex items-center justify-between pb-1">
         <button 
           onClick={onBack}
-          className="p-2 rounded-2xl hover:bg-[#d9efbd] text-[#450c3f] transition-all bg-white border border-[#e5ebc5] shadow-2xs"
+          className="flex items-center gap-1.5 text-[11px] font-semibold text-white/60 active:scale-90 transition-all"
         >
           <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
         </button>
-        <div className="flex items-center gap-1.5">
-          <div className="p-1.5 rounded-xl bg-[#450c3f] text-[#b9d175]">
-            <Shield className="w-4 h-4" />
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-[10px] flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#D8F828,#A8CC18)' }}>
+            <Shield className="w-[14px] h-[14px] text-[#1A0317] stroke-[2.8]" />
           </div>
-          <span className="font-extrabold font-heading text-[#450c3f] text-base">Security History</span>
+          <span className="font-extrabold text-white text-[15px]" style={{ fontFamily: 'Outfit, sans-serif' }}>Security History</span>
         </div>
-        <div className="w-8 h-8 rounded-full bg-[#450c3f] text-[#b9d175] flex items-center justify-center font-bold text-xs shadow-xs">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-[#1A0317]" style={{ background: 'linear-gradient(135deg,#D8F828,#A8CC18)' }}>
           {user?.name ? user.name[0].toUpperCase() : 'U'}
         </div>
       </div>
 
       {/* Page Title & Subtext */}
       <div>
-        <h1 className="text-xl font-extrabold text-[#450c3f] font-heading tracking-tight">
-          Activity & Incident Logs
+        <h1 className="text-[20px] font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+          Activity &amp; Incident Logs
         </h1>
-        <p className="text-xs text-[#5e4d6a] font-medium leading-relaxed mt-0.5">
+        <p className="text-[11.5px] text-white/45 font-medium leading-relaxed mt-0.5">
           Review all your UPI threat checks, screened call logs, and bank admin ticket reviews.
         </p>
       </div>
@@ -277,91 +279,81 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
       {/* Search Bar & Live Sync Button */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+          <Search className="w-4 h-4 text-white/30 absolute left-3.5 top-3.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by VPA, phone number, or ticket ID..."
-            className="w-full bg-white border border-[#e5ebc5] rounded-2xl py-2.5 pl-10 pr-4 text-xs text-[#1e112a] focus:outline-none focus:border-[#450c3f] shadow-2xs"
+            className="w-full rounded-[14px] py-2.5 pl-10 pr-4 text-xs font-mono font-medium text-white placeholder:text-white/25 focus:outline-none transition-all"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
           />
         </div>
         <button
           onClick={fetchLiveHistory}
           title="Refresh History from Live Backend"
-          className="p-2.5 rounded-2xl bg-white border border-[#e5ebc5] hover:bg-[#d9efbd] text-[#450c3f] shadow-2xs active:scale-95 transition-all"
+          className="p-2.5 rounded-[14px] text-white/70 active:scale-95 transition-all"
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#D8F828]' : ''}`} />
         </button>
       </div>
 
       {/* 3-Way Segmented Tabs: Pre-Checks | Call Logs | Admin Tickets */}
-      <div className="grid grid-cols-3 gap-1 p-1 bg-white rounded-2xl border border-[#e5ebc5] shadow-2xs">
-        <button
-          onClick={() => setActiveTab('prechecks')}
-          className={`py-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
-            activeTab === 'prechecks'
-              ? 'bg-[#450c3f] text-[#f5fbda] shadow-sm'
-              : 'text-[#5e4d6a] hover:text-[#1e112a]'
-          }`}
-        >
-          <span>⚡ Pre-Checks</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('calls')}
-          className={`py-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
-            activeTab === 'calls'
-              ? 'bg-[#450c3f] text-[#f5fbda] shadow-sm'
-              : 'text-[#5e4d6a] hover:text-[#1e112a]'
-          }`}
-        >
-          <Phone className="w-3 h-3" /> Calls
-        </button>
-        <button
-          onClick={() => setActiveTab('tickets')}
-          className={`py-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
-            activeTab === 'tickets'
-              ? 'bg-[#450c3f] text-[#f5fbda] shadow-sm'
-              : 'text-[#5e4d6a] hover:text-[#1e112a]'
-          }`}
-        >
-          <Ticket className="w-3 h-3" /> Tickets
-        </button>
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        {[
+          { id: 'prechecks', label: '⚡ Pre-Checks' },
+          { id: 'calls', label: '📞 Calls' },
+          { id: 'tickets', label: '🎫 Tickets' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`py-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
+              activeTab === tab.id
+                ? 'bg-[#D8F828] text-[#1A0317] shadow-sm'
+                : 'text-white/50 hover:text-white'
+            }`}
+            style={{ fontFamily: 'Outfit, sans-serif' }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* ── TAB 1: UPI PRE-CHECKS HISTORY ─────────────────────────────────── */}
+      {/* ── TAB 1: UPI PRE-CHECKS HISTORY ── */}
       {activeTab === 'prechecks' && (
         <div className="space-y-3">
           {preCheckHistory
             .filter(item => item.vpa.toLowerCase().includes(searchQuery.toLowerCase()) || item.payee.toLowerCase().includes(searchQuery.toLowerCase()))
             .map((item) => (
-              <div key={item.id} className="bg-white rounded-3xl p-4 border border-[#e5ebc5] shadow-xs space-y-3 animate-fade-in">
+              <div key={item.id} className="rounded-[24px] p-4 space-y-3 animate-fade-in" style={glassCard}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className={`p-2.5 rounded-2xl ${item.riskScore > 50 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                    <div className={`p-2.5 rounded-2xl ${item.riskScore > 50 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
                       {item.riskScore > 50 ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-[#1e112a] font-mono">{item.vpa}</h3>
-                      <p className="text-[10px] text-[#5e4d6a] font-medium">{item.payee} • {item.timestamp}</p>
+                      <h3 className="text-xs font-black text-white font-mono">{item.vpa}</h3>
+                      <p className="text-[10px] text-white/40 font-medium">{item.payee} • {item.timestamp}</p>
                     </div>
                   </div>
 
-                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${
+                  <span className={`text-[9.5px] font-black px-2.5 py-1 rounded-full border font-mono ${
                     item.riskScore > 50 
-                      ? 'bg-rose-100 text-rose-800 border-rose-200' 
-                      : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' 
+                      : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                   }`}>
                     {item.riskScore > 50 ? `🚨 ${item.riskScore}% RISK` : '🟢 SAFE'}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#f5fbda]/60 border border-[#d9efbd] space-y-1">
-                  <div className="flex justify-between items-center text-[10px] text-[#5e4d6a]">
-                    <span>Amount Checked: <strong className="text-[#1e112a]">{item.amount}</strong></span>
-                    <span>Note: <span className="italic">{item.note}</span></span>
+                <div className="p-3 rounded-[16px] space-y-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="flex justify-between items-center text-[10px] text-white/40">
+                    <span>Amount Checked: <strong className="text-white font-mono">{item.amount}</strong></span>
+                    <span>Note: <span className="italic text-white/60">{item.note}</span></span>
                   </div>
-                  <p className="text-[11px] text-[#1e112a] font-medium leading-relaxed pt-1">
+                  <p className="text-[11px] text-white/80 font-medium leading-relaxed pt-1">
                     {item.reason}
                   </p>
                 </div>
@@ -370,32 +362,32 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
         </div>
       )}
 
-      {/* ── TAB 2: CALL LOGS & VOICE SCANS ─────────────────────────────────── */}
+      {/* ── TAB 2: CALL LOGS & VOICE SCANS ── */}
       {activeTab === 'calls' && (
         <div className="space-y-3">
           {callAlerts
             .filter(item => item.identifier.toLowerCase().includes(searchQuery.toLowerCase()) || item.summary.toLowerCase().includes(searchQuery.toLowerCase()))
             .map((item) => (
-              <div key={item.id} className="bg-white rounded-3xl p-4 border border-[#e5ebc5] shadow-xs space-y-3 animate-fade-in">
+              <div key={item.id} className="rounded-[24px] p-4 space-y-3 animate-fade-in" style={glassCard}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2.5 rounded-2xl bg-rose-50 text-rose-600">
+                    <div className="p-2.5 rounded-2xl bg-rose-500/20 text-rose-400">
                       <Phone className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-[#1e112a] font-mono">{item.identifier}</h3>
-                      <p className="text-[10px] text-[#5e4d6a] font-medium">{item.timestamp}</p>
+                      <h3 className="text-xs font-black text-white font-mono">{item.identifier}</h3>
+                      <p className="text-[10px] text-white/40 font-medium">{item.timestamp}</p>
                     </div>
                   </div>
 
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
+                  <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full font-mono ${item.badgeColor}`}>
                     🔴 {item.badge}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#f5fbda]/60 border border-[#d9efbd] flex items-start gap-2">
-                  <Info className="w-4 h-4 text-[#450c3f] shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-[#1e112a] leading-relaxed font-medium">
+                <div className="p-3 rounded-[16px] flex items-start gap-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <Info className="w-4 h-4 text-[#D8F828] shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-white/80 leading-relaxed font-medium">
                     {item.summary}
                   </p>
                 </div>
@@ -405,8 +397,8 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
                     onClick={() => handleBlock(item.id, item.identifier)}
                     className={`flex-1 py-2.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                       blockedItems.includes(item.id)
-                        ? 'bg-slate-200 text-slate-600'
-                        : 'bg-[#450c3f] hover:bg-[#33082e] text-[#f5fbda] shadow-sm'
+                        ? 'bg-white/10 text-white/40'
+                        : 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm'
                     }`}
                   >
                     <Ban className="w-3.5 h-3.5" />
@@ -417,11 +409,11 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
                     onClick={() => handleOpenReportModal(item)}
                     className={`flex-1 py-2.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                       reportedItems.includes(item.id)
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-white border border-[#e5ebc5] hover:bg-slate-50 text-[#1e112a]'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-white/10 border border-white/15 hover:bg-white/15 text-white'
                     }`}
                   >
-                    <Flag className="w-3.5 h-3.5 text-rose-600" />
+                    <Flag className="w-3.5 h-3.5 text-rose-400" />
                     {reportedItems.includes(item.id) ? 'Reported (1930)' : 'Report Incident'}
                   </button>
                 </div>
@@ -430,39 +422,39 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
         </div>
       )}
 
-      {/* ── TAB 3: TICKET RESPONSES & ADMIN REVIEWS ─────────────────────────── */}
+      {/* ── TAB 3: TICKET RESPONSES & ADMIN REVIEWS ── */}
       {activeTab === 'tickets' && (
         <div className="space-y-3">
           {adminTickets
             .filter(item => item.id.toLowerCase().includes(searchQuery.toLowerCase()) || item.vpa.toLowerCase().includes(searchQuery.toLowerCase()))
             .map((ticket) => (
-              <div key={ticket.id} className="bg-white rounded-3xl p-4 border border-[#e5ebc5] shadow-xs space-y-3 animate-fade-in">
+              <div key={ticket.id} className="rounded-[24px] p-4 space-y-3 animate-fade-in" style={glassCard}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-[#450c3f] text-[#b9d175]">
+                    <div className="p-2 rounded-xl" style={{ background: 'rgba(216,248,40,0.15)', color: '#D8F828' }}>
                       <Ticket className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-[#450c3f] font-mono">{ticket.id}</h3>
-                      <p className="text-[10px] text-[#5e4d6a] font-medium">Submitted: {ticket.submittedAt}</p>
+                      <h3 className="text-xs font-black text-[#D8F828] font-mono">{ticket.id}</h3>
+                      <p className="text-[10px] text-white/40 font-medium">Submitted: {ticket.submittedAt}</p>
                     </div>
                   </div>
 
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${ticket.statusColor}`}>
+                  <span className={`text-[9.5px] font-bold px-2.5 py-1 rounded-full border font-mono ${ticket.statusColor}`}>
                     {ticket.statusLabel}
                   </span>
                 </div>
 
-                <div className="text-xs text-[#1e112a] p-2.5 bg-slate-50 rounded-2xl border border-slate-100">
-                  <span className="text-[10px] text-[#5e4d6a] block">Target VPA under review:</span>
-                  <span className="font-mono font-bold text-[#450c3f]">{ticket.vpa}</span>
+                <div className="text-xs p-2.5 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span className="text-[10px] text-white/40 block">Target VPA under review:</span>
+                  <span className="font-mono font-bold text-white">{ticket.vpa}</span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#f5fbda]/60 border border-[#d9efbd] space-y-1">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#450c3f] uppercase">
-                    <Shield className="w-3 h-3 text-[#6b8f1a]" /> Bank Surveillance & Admin Response:
+                <div className="p-3 rounded-2xl space-y-1" style={{ background: 'rgba(216,248,40,0.06)', border: '1px solid rgba(216,248,40,0.15)' }}>
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#D8F828] uppercase font-mono">
+                    <Shield className="w-3 h-3 text-[#D8F828]" /> Bank Surveillance &amp; Admin Response:
                   </div>
-                  <p className="text-[11px] text-[#1e112a] font-medium leading-relaxed">
+                  <p className="text-[11px] text-white/80 font-medium leading-relaxed">
                     {ticket.adminNote}
                   </p>
                 </div>
@@ -473,24 +465,24 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
 
       {/* Official Cyber Crime Reporting Modal */}
       {reportingItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-xs rounded-3xl p-5 border border-[#e5ebc5] space-y-3.5 animate-slide-down shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-xs rounded-3xl p-5 space-y-3.5 animate-slide-down shadow-2xl" style={{ background: '#1F0626', border: '1px solid rgba(255,255,255,0.15)' }}>
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold text-[#450c3f] flex items-center gap-1.5">
-                <Flag className="w-4 h-4 text-rose-600" /> Report to Cyber Crime (1930)
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <Flag className="w-4 h-4 text-rose-500" /> Report to Cyber Crime (1930)
               </h4>
-              <button onClick={() => setReportingItem(null)} className="text-slate-400 hover:text-slate-700 text-sm font-bold">✕</button>
+              <button onClick={() => setReportingItem(null)} className="text-white/40 hover:text-white text-sm font-bold">✕</button>
             </div>
 
-            <div className="p-2.5 rounded-2xl bg-[#f5fbda]/60 border border-[#d9efbd] text-xs">
-              <span className="text-[10px] text-[#5e4d6a] block">Flagged Threat:</span>
-              <p className="font-bold text-[#450c3f] font-mono">{reportingItem.identifier || reportingItem.vpa}</p>
-              <span className="text-[10px] text-rose-700 font-semibold">{reportingItem.badge || 'High Risk Threat'}</span>
+            <div className="p-2.5 rounded-2xl text-xs" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <span className="text-[10px] text-white/40 block">Flagged Threat:</span>
+              <p className="font-bold text-[#D8F828] font-mono">{reportingItem.identifier || reportingItem.vpa}</p>
+              <span className="text-[10px] text-rose-400 font-semibold">{reportingItem.badge || 'High Risk Threat'}</span>
             </div>
 
             <form onSubmit={handleSubmitReport} className="space-y-3">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#5e4d6a] block mb-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 font-mono block mb-1">
                   Additional Incident Details:
                 </label>
                 <textarea
@@ -498,22 +490,24 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
                   onChange={(e) => setReportNote(e.target.value)}
                   placeholder="e.g. Scammer asked for OTP and threatened with immediate arrest."
                   rows={3}
-                  className="w-full bg-[#f5fbda]/40 border border-[#d9efbd] rounded-xl p-2.5 text-xs text-[#1e112a] focus:outline-none focus:border-[#450c3f]"
+                  className="w-full rounded-xl p-2.5 text-xs text-white placeholder:text-white/25 focus:outline-none"
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
                 />
               </div>
 
               {reportSuccess && (
-                <div className="p-2.5 rounded-xl text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 text-center font-bold flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Submitted to Cyber Crime Registry!
+                <div className="p-2.5 rounded-xl text-xs bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-center font-bold flex items-center justify-center gap-1">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Submitted to Cyber Crime Registry!
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={reportSuccess}
-                className="w-full py-3 bg-[#450c3f] hover:bg-[#33082e] text-[#f5fbda] rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition-all"
+                className="w-full py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition-all"
+                style={{ background: 'linear-gradient(135deg,#E4FF2E,#C4E810)', color: '#1A0317', fontFamily: 'Outfit, sans-serif' }}
               >
-                <Send className="w-3.5 h-3.5 text-[#b9d175]" /> Submit Report (1930 / I4C)
+                <Send className="w-3.5 h-3.5 text-[#1A0317]" /> Submit Report (1930 / I4C)
               </button>
             </form>
           </div>

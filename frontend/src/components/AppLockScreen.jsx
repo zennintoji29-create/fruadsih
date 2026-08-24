@@ -25,7 +25,6 @@ export default function AppLockScreen({ onUnlock, currentLang = 'en', onForgotPi
         // Success
         onUnlock();
       } else {
-        // Biometrics not enrolled on hardware
         setErrorMsg('Biometrics not enrolled on this device. Please use PIN.');
         setTimeout(() => setErrorMsg(null), 2500);
       }
@@ -40,7 +39,6 @@ export default function AppLockScreen({ onUnlock, currentLang = 'en', onForgotPi
 
   useEffect(() => {
     if (isBiometricEnabled) {
-      // Auto prompt native biometric on app start
       handleNativeBiometric();
     }
   }, []);
@@ -72,16 +70,18 @@ export default function AppLockScreen({ onUnlock, currentLang = 'en', onForgotPi
     }
   };
 
+  const darkBg = { background: 'linear-gradient(160deg, #1B0A22 0%, #23072D 40%, #150520 75%, #0D0215 100%)' };
+
   return (
-    <div className="fixed inset-0 z-50 bg-[#450c3f] text-[#f5fbda] flex flex-col justify-between p-6 font-sans select-none animate-fade-in">
+    <div className="fixed inset-0 z-50 text-white flex flex-col justify-between p-6 font-sans select-none animate-fade-in" style={darkBg}>
       {/* Top Header & Dots */}
       <div className="text-center pt-8 space-y-3">
-        <div className="w-16 h-16 rounded-3xl bg-white/10 border border-[#b9d175]/30 mx-auto flex items-center justify-center shadow-xl overflow-hidden p-2">
-          <img src="/app_icon.png" alt="Verix" className="w-full h-full object-cover rounded-2xl" onError={(e) => { e.target.style.display = 'none'; }} />
+        <div className="w-16 h-16 rounded-[22px] p-0.5 mx-auto flex items-center justify-center shadow-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #D8F828, #A8CC18)' }}>
+          <Shield className="w-8 h-8 text-[#1A0317] stroke-[2.8]" />
         </div>
         <div>
-          <h1 className="text-2xl font-black font-heading text-white tracking-tight">Verix Locked</h1>
-          <p className="text-xs text-[#b9d175] font-mono tracking-wider mt-0.5">ENTER 4-DIGIT SECURITY PIN</p>
+          <h1 className="text-2xl font-black font-heading text-white tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>Verix Locked</h1>
+          <p className="text-xs text-[#D8F828] font-mono tracking-wider mt-0.5">ENTER 4-DIGIT SECURITY PIN</p>
         </div>
 
         {/* 4 PIN Dots */}
@@ -91,67 +91,72 @@ export default function AppLockScreen({ onUnlock, currentLang = 'en', onForgotPi
               key={idx}
               className={`w-4 h-4 rounded-full border-2 transition-all ${
                 pin.length > idx
-                  ? 'bg-[#b9d175] border-[#b9d175] scale-125 shadow-lg shadow-[#b9d175]/60'
-                  : 'border-white/30 bg-transparent'
+                  ? 'bg-[#D8F828] border-[#D8F828] scale-125 shadow-lg shadow-[#D8F828]/60'
+                  : 'border-white/20 bg-transparent'
               }`}
             />
           ))}
         </div>
 
         {errorMsg && (
-          <p className="text-xs text-rose-300 font-semibold animate-pulse pt-1">{errorMsg}</p>
+          <p className="text-xs text-rose-400 font-medium animate-pulse pt-2">
+            {errorMsg}
+          </p>
         )}
       </div>
 
-      {/* Bottom Pinned Keypad Layout */}
-      <div className="max-w-xs mx-auto w-full space-y-4 pb-6">
-        <div className="grid grid-cols-3 gap-3.5">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+      {/* Number Pad Grid */}
+      <div className="max-w-xs mx-auto w-full space-y-3 pb-4">
+        <div className="grid grid-cols-3 gap-3">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
             <button
-              key={num}
+              key={digit}
               type="button"
-              onClick={() => handleDigit(num.toString())}
-              className="h-16 rounded-full bg-white/10 hover:bg-white/20 active:bg-[#b9d175] active:text-[#450c3f] text-2xl font-bold font-heading transition-all shadow-sm flex items-center justify-center"
+              onClick={() => handleDigit(digit.toString())}
+              className="h-16 rounded-2xl text-2xl font-black font-mono flex items-center justify-center transition-all active:scale-90"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
             >
-              {num}
+              {digit}
             </button>
           ))}
 
-          {/* Real Android Fingerprint Sensor Prompt Button */}
+          {/* Biometric Trigger */}
           <button
             type="button"
             onClick={handleNativeBiometric}
-            className="h-16 rounded-full bg-[#b9d175]/20 hover:bg-[#b9d175]/30 active:scale-95 text-[#b9d175] transition-all flex items-center justify-center border border-[#b9d175]/40 shadow-sm"
-            title="Authenticate with Fingerprint"
+            className="h-16 rounded-2xl flex items-center justify-center transition-all active:scale-90"
+            style={{ background: 'rgba(216,248,40,0.12)', border: '1px solid rgba(216,248,40,0.25)', color: '#D8F828' }}
           >
-            <Fingerprint className="w-7 h-7 text-[#b9d175]" />
+            <Fingerprint className="w-7 h-7" />
           </button>
 
-          {/* 0 Key */}
+          {/* Zero */}
           <button
             type="button"
             onClick={() => handleDigit('0')}
-            className="h-16 rounded-full bg-white/10 hover:bg-white/20 active:bg-[#b9d175] active:text-[#450c3f] text-2xl font-bold font-heading transition-all shadow-sm flex items-center justify-center"
+            className="h-16 rounded-2xl text-2xl font-black font-mono flex items-center justify-center transition-all active:scale-90"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
           >
             0
           </button>
 
-          {/* Delete Key */}
+          {/* Delete Button */}
           <button
             type="button"
             onClick={handleDelete}
-            className="h-16 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 text-white/80 transition-all flex items-center justify-center"
+            className="h-16 rounded-2xl flex items-center justify-center transition-all active:scale-90 text-white/50 hover:text-white"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
           >
             <Delete className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Forgot PIN Link */}
+        {/* Forgot PIN / Reset Link */}
         <div className="text-center pt-2">
           <button
             type="button"
             onClick={onForgotPin}
-            className="text-xs text-white/60 hover:text-white underline"
+            className="text-xs text-white/40 hover:text-[#D8F828] font-medium underline transition-colors"
           >
             Forgot PIN / Relogin
           </button>

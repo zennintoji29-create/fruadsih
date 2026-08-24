@@ -548,40 +548,41 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
   // DEFAULT VIEW: PRE-PAYMENT CHECK FORM & RESULTS
   // -------------------------------------------------------------
   return (
-    <div className="flex flex-col h-full overflow-y-auto px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-28 space-y-4 bg-[#f5fbda] text-[#1e112a] font-sans selection:bg-[#450c3f] selection:text-white">
+    <div className="flex flex-col min-h-full w-full overflow-y-auto px-4 pt-4 pb-28 space-y-4 font-sans select-none" style={{ background: 'linear-gradient(160deg, #1B0A22 0%, #23072D 40%, #150520 75%, #0D0215 100%)' }}>
       {/* Top Header */}
       <div className="flex items-center justify-between pb-1">
-        <button 
+        <button
           onClick={onBack}
-          className="p-2 rounded-xl bg-white border border-[#e5ebc5] hover:bg-[#d9efbd] text-[#450c3f] transition-all flex items-center gap-1 text-xs font-semibold shadow-sm"
+          className="flex items-center gap-1.5 text-[11px] font-semibold text-white/60 active:scale-90 transition-all"
         >
-          <ArrowLeft className="w-4 h-4" /> {t.backBtn}
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" /> {t.backBtn}
         </button>
-        <h2 className="text-sm font-bold text-[#450c3f] font-heading">{t.runPreCheck}</h2>
-        <button 
+        <h2 className="text-[14px] font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>{t.runPreCheck}</h2>
+        <button
           onClick={() => setShowQrModal(true)}
           title="Scan QR Code"
-          className="p-2 rounded-xl bg-[#450c3f] text-[#b9d175] hover:bg-[#33082e] transition-all shadow-sm flex items-center gap-1 text-xs font-bold"
+          className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full active:scale-90 transition-all"
+          style={{ background: 'linear-gradient(135deg,#D8F828,#A8CC18)', color: '#1A0317' }}
         >
-          <QrCode className="w-4 h-4" /> {t.scanQr}
+          <QrCode className="w-3.5 h-3.5 stroke-[2.5]" /> {t.scanQr}
         </button>
       </div>
 
       {/* Input Form Card */}
-      <div className="bg-white rounded-3xl p-5 border border-[#e5ebc5] space-y-3.5 shadow-sm">
+      <div className="rounded-[24px] p-5 space-y-3.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
         {/* Recipient UPI ID */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[#5e4d6a] block">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-white/45 font-mono block">
               {t.vpaLabel}
             </label>
             {vpa.trim() && (
               <button 
                 type="button" 
                 onClick={copyToClipboard}
-                className="text-[10px] font-bold text-[#450c3f] flex items-center gap-1 hover:underline"
+                className="text-[10px] font-bold text-[#D8F828] flex items-center gap-1"
               >
-                {copied ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                 {copied ? t.copied : t.copyUpi}
               </button>
             )}
@@ -591,13 +592,14 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
             value={vpa}
             onChange={(e) => setVpa(e.target.value)}
             placeholder="e.g. 9477530475@paytm or ranasubhadip2345@okaxis"
-            className="w-full bg-[#f5fbda]/40 border border-[#d9efbd] rounded-xl py-2.5 px-3 text-xs text-[#1e112a] focus:outline-none focus:border-[#450c3f] font-mono font-bold"
+            className="w-full rounded-[14px] py-3 px-4 text-[12px] font-mono font-bold text-white placeholder:text-white/25 focus:outline-none transition-all"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
           />
         </div>
 
         {/* Amount */}
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-[#5e4d6a] block mb-1">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-white/45 font-mono block mb-1">
             {t.amountLabel}
           </label>
           <input
@@ -605,18 +607,19 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="e.g. 2 or 500"
-            className="w-full bg-[#f5fbda]/40 border border-[#d9efbd] rounded-xl py-2.5 px-3 text-xs text-[#1e112a] focus:outline-none focus:border-[#450c3f] font-mono font-bold"
+            className="w-full rounded-[14px] py-3 px-4 text-[12px] font-mono font-bold text-white placeholder:text-white/25 focus:outline-none transition-all"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
           />
         </div>
 
         {/* Suspicious Message / SMS / Call Context Input Box (Prominently below Amount) */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-[#450c3f] flex items-center gap-1">
-              <MessageSquareWarning className="w-3.5 h-3.5 text-amber-600" />
+            <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 font-mono flex items-center gap-1">
+              <MessageSquareWarning className="w-3.5 h-3.5 text-amber-400" />
               {t.suspiciousMsgLabel}
             </label>
-            <span className="text-[9px] text-[#5e4d6a] font-medium bg-[#d9efbd] px-1.5 py-0.5 rounded-md text-[#450c3f] font-bold">
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full font-mono" style={{ background: 'rgba(216,248,40,0.12)', color: '#D8F828', border: '1px solid rgba(216,248,40,0.25)' }}>
               {t.aiScanned}
             </span>
           </div>
@@ -624,26 +627,29 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
             rows={3}
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Paste SMS or call context (e.g. 'Police officer demanding ₹25,000 security bail' or 'Electricity bill due tonight, pay now')"
-            className="w-full bg-[#f5fbda]/50 border border-[#d9efbd] rounded-xl py-2 px-3 text-xs text-[#1e112a] focus:outline-none focus:border-[#450c3f] resize-none leading-relaxed placeholder:text-slate-400"
+            placeholder="Paste SMS or call context (e.g. 'Police officer demanding ₹25,000 security bail')"
+            className="w-full rounded-[14px] py-3 px-4 text-[12px] text-white placeholder:text-white/25 focus:outline-none resize-none leading-relaxed transition-all"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
           />
-          <p className="text-[9px] text-[#5e4d6a] mt-0.5 leading-tight">
+          <p className="text-[9px] text-white/30 mt-0.5 leading-tight">
             {t.suspiciousMsgHint}
           </p>
         </div>
 
         {/* Coercion Simulation Context Toggle */}
-        <div className="pt-2 flex items-center justify-between border-t border-[#e5ebc5]">
+        <div className="pt-2 flex items-center justify-between" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center gap-1.5">
-            <PhoneCall className={`w-3.5 h-3.5 ${isOnCall ? 'text-rose-600 animate-pulse' : 'text-[#5e4d6a]'}`} />
-            <span className="text-[11px] text-[#5e4d6a] font-medium">{t.activeCallLabel}</span>
+            <PhoneCall className={`w-3.5 h-3.5 stroke-[2] ${isOnCall ? 'text-rose-400 animate-pulse' : 'text-white/35'}`} />
+            <span className="text-[11px] text-white/50 font-medium">{t.activeCallLabel}</span>
           </div>
           <button
             type="button"
             onClick={() => setIsOnCall(!isOnCall)}
-            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
-              isOnCall ? 'bg-rose-600 text-white shadow-xs' : 'bg-[#d9efbd] text-[#450c3f]'
-            }`}
+            className="px-3 py-1.5 rounded-full text-[10px] font-bold transition-all active:scale-90"
+            style={isOnCall
+              ? { background: 'linear-gradient(135deg,#E8546B,#C92040)', color: 'white', boxShadow: '0 4px 12px rgba(232,84,107,0.3)' }
+              : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.12)' }
+            }
           >
             {isOnCall ? t.activeCallYes : t.activeCallNo}
           </button>
@@ -652,22 +658,25 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
         <button
           onClick={handleRunCheck}
           disabled={loading || !vpa.trim()}
-          className="w-full py-3.5 bg-[#450c3f] hover:bg-[#33082e] text-[#f5fbda] rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-[#450c3f]/25 transition-all disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2.5 font-black text-[13px] uppercase tracking-wider rounded-[18px] active:scale-[0.97] disabled:opacity-50 transition-all"
+          style={{ height: '52px', background: 'linear-gradient(135deg,#E4FF2E 0%,#C4E810 60%,#A8CC18 100%)', boxShadow: '0 8px 24px rgba(216,248,40,0.35)', color: '#1A0317', fontFamily: 'Outfit, sans-serif' }}
         >
-          {loading ? <RefreshCw className="w-4 h-4 animate-spin text-[#b9d175]" /> : <ShieldCheck className="w-4 h-4 text-[#b9d175]" />}
+          {loading ? <RefreshCw className="w-4 h-4 animate-spin text-[#1A0317]" /> : <ShieldCheck className="w-4 h-4 text-[#1A0317] stroke-[2.8]" />}
           {loading ? t.evaluating : t.runEvaluation}
         </button>
       </div>
 
       {/* Evaluation Results Card */}
       {result && (
-        <div className={`rounded-3xl p-5 border animate-slide-down space-y-3.5 shadow-sm ${
-          result.isBlocked 
-            ? 'border-rose-300 bg-rose-50' 
-            : result.riskScore >= 50 
-              ? 'border-amber-300 bg-amber-50' 
-              : 'border-[#b9d175] bg-white'
-        }`}>
+        <div
+          className="rounded-[24px] p-5 animate-slide-down space-y-3.5"
+          style={result.isBlocked
+            ? { background: 'rgba(232,84,107,0.08)', border: '1px solid rgba(232,84,107,0.35)' }
+            : result.riskScore >= 50
+              ? { background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)' }
+              : { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)' }
+          }
+        >
           {/* Risk Level Badge & Score Meter */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">

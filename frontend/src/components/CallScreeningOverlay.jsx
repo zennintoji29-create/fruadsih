@@ -40,7 +40,7 @@ export default function CallScreeningOverlay({ callerNumber = '+919876543210', o
   }, [callState]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#450c3f]/95 backdrop-blur-md flex flex-col justify-between p-6 animate-fade-in text-[#f5fbda] font-sans selection:bg-[#b9d175] selection:text-[#450c3f]">
+    <div className="fixed inset-0 z-50 backdrop-blur-md flex flex-col justify-between p-6 animate-fade-in text-white font-sans select-none" style={{ background: 'linear-gradient(160deg, #1B0A22 0%, #23072D 40%, #150520 75%, #0D0215 100%)' }}>
       {/* Top Floating Security HUD (CallScreeningService Badge) */}
       <div className="animate-slide-down space-y-2 pt-2">
         <div className="flex items-center justify-between text-xs text-[#b9d175]">
@@ -126,9 +126,10 @@ export default function CallScreeningOverlay({ callerNumber = '+919876543210', o
 
             <button
               onClick={() => setCallState('CONNECTED_RECORDING')}
-              className="py-4 bg-[#b9d175] hover:bg-[#a8c45e] text-[#450c3f] rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-black/30 transition-all active:scale-95"
+              className="py-4 rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 uppercase tracking-wider"
+              style={{ background: 'linear-gradient(135deg, #E4FF2E, #C4E810)', color: '#1A0317', fontFamily: 'Outfit, sans-serif' }}
             >
-              <Mic className="w-4 h-4" /> Accept & Record
+              <Mic className="w-4 h-4 stroke-[2.8]" /> Accept & Record
             </button>
           </div>
         ) : (

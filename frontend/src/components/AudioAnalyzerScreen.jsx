@@ -131,84 +131,82 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#f5fbda] text-[#1e112a] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-28 space-y-4 font-sans selection:bg-[#450c3f] selection:text-white">
+    <div className="flex flex-col min-h-full w-full font-sans select-none overflow-y-auto pb-28 space-y-4 px-4 pt-4" style={{ background: 'linear-gradient(160deg, #1B0A22 0%, #23072D 40%, #150520 75%, #0D0215 100%)' }}>
       {/* Top Header */}
       <div className="flex items-center justify-between pb-1">
-        <button 
+        <button
           onClick={onBack}
-          className="p-1.5 rounded-xl hover:bg-[#d9efbd] text-[#450c3f] transition-all flex items-center gap-1 text-xs font-semibold"
+          className="flex items-center gap-1.5 text-[11px] font-semibold text-white/60 active:scale-90 transition-all"
         >
-          <ArrowLeft className="w-4 h-4" /> {t.backBtn}
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" /> {t.backBtn}
         </button>
-        <div className="flex items-center gap-1.5">
-          <div className="p-1 rounded-lg bg-[#450c3f] text-[#b9d175]">
-            <Shield className="w-4 h-4" />
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-[8px] flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#D8F828,#A8CC18)' }}>
+            <Shield className="w-[13px] h-[13px] text-[#1A0317] stroke-[2.8]" />
           </div>
-          <span className="font-bold font-heading text-[#450c3f] text-sm">Verix AI</span>
+          <span className="font-extrabold text-white text-[14px]" style={{ fontFamily: 'Outfit, sans-serif' }}>Verix AI</span>
         </div>
-        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#d9efbd] text-[#450c3f] border border-[#b9d175]">
+        <span className="text-[9px] font-bold px-2.5 py-1 rounded-full font-mono uppercase tracking-wider" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399' }}>
           Zero Audio Stored
         </span>
       </div>
 
       {/* Page Title & Subtext */}
       <div>
-        <h1 className="text-xl font-bold text-[#450c3f] font-heading">{t.aiVoiceScan}</h1>
-        <p className="text-xs text-[#5e4d6a] font-medium leading-tight">
+        <h1 className="text-[20px] font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>{t.aiVoiceScan}</h1>
+        <p className="text-[11.5px] text-white/45 font-medium leading-snug mt-0.5">
           Real-time speech-to-intent analysis for digital arrest and coercion detection.
         </p>
       </div>
 
       {/* Live Mic Recorder Card */}
-      <div className="bg-white rounded-3xl p-5 border border-[#e5ebc5] shadow-xs text-center space-y-3.5">
-        <div className={`w-14 h-14 rounded-3xl mx-auto flex items-center justify-center transition-all ${
-          recordingLive 
-            ? 'bg-rose-600 text-white animate-ping' 
-            : 'bg-[#d9efbd] text-[#450c3f]'
-        }`}>
-          <Mic className="w-7 h-7" />
+      <div className="rounded-[24px] p-5 text-center space-y-3.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
+        <div
+          className="w-14 h-14 rounded-[20px] mx-auto flex items-center justify-center transition-all"
+          style={recordingLive
+            ? { background: 'linear-gradient(135deg,#E8546B,#C92040)', boxShadow: '0 0 24px rgba(232,84,107,0.5)' }
+            : { background: 'rgba(216,248,40,0.15)', border: '1px solid rgba(216,248,40,0.3)' }
+          }
+        >
+          <Mic className={`w-7 h-7 ${recordingLive ? 'text-white animate-pulse' : 'text-[#D8F828]'} stroke-[2]`} />
         </div>
 
         <div>
-          <h3 className="text-sm font-bold text-[#1e112a] font-heading">
+          <h3 className="text-[13.5px] font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
             {recordingLive ? `Recording Call Audio (00:${recTimer < 10 ? `0${recTimer}` : recTimer})` : 'Live Call Speech Interceptor'}
           </h3>
-          <p className="text-[11px] text-[#5e4d6a] mt-0.5 leading-snug">
+          <p className="text-[10.5px] text-white/45 mt-0.5 leading-snug">
             In-Memory AI: Transcribes, scores threat vectors, and discards raw audio automatically.
           </p>
         </div>
 
         {liveTranscript && (
-          <div className="p-3 rounded-2xl bg-[#f5fbda]/70 border border-[#d9efbd] text-left">
-            <span className="text-[9px] font-mono uppercase font-bold text-[#450c3f] block mb-1">Live Transcript:</span>
-            <p className="text-xs text-[#1e112a] italic font-medium">{liveTranscript}</p>
+          <div className="p-3 rounded-[14px] text-left" style={{ background: 'rgba(216,248,40,0.06)', border: '1px solid rgba(216,248,40,0.2)' }}>
+            <span className="text-[9px] font-mono uppercase font-bold text-[#D8F828] block mb-1">Live Transcript:</span>
+            <p className="text-[11px] text-white/70 italic font-medium">{liveTranscript}</p>
           </div>
         )}
 
         <button
           onClick={recordingLive ? stopLiveRecording : startLiveSpeechRecognition}
-          className={`w-full py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] ${
-            recordingLive 
-              ? 'bg-rose-600 hover:bg-rose-700 text-white' 
-              : 'bg-[#450c3f] hover:bg-[#33082e] text-[#f5fbda] shadow-[#450c3f]/25'
-          }`}
+          className="w-full py-3.5 rounded-[18px] text-[12.5px] font-black flex items-center justify-center gap-2 transition-all active:scale-[0.97] uppercase tracking-wider"
+          style={recordingLive
+            ? { background: 'linear-gradient(135deg,#E8546B,#C92040)', color: 'white', boxShadow: '0 6px 20px rgba(232,84,107,0.35)', fontFamily: 'Outfit, sans-serif' }
+            : { background: 'linear-gradient(135deg,#E4FF2E,#C4E810)', color: '#1A0317', boxShadow: '0 8px 20px rgba(216,248,40,0.3)', fontFamily: 'Outfit, sans-serif' }
+          }
         >
           {recordingLive ? (
-            <>
-              <Square className="w-4 h-4 text-white" /> Stop & Analyze Call Audio
-            </>
+            <><Square className="w-4 h-4" /> Stop &amp; Analyze Call Audio</>
           ) : (
-            <>
-              <Mic className="w-4 h-4 text-[#b9d175]" /> Record Live Audio Sample (15s)
-            </>
+            <><Mic className="w-4 h-4 stroke-[2.8]" /> Record Live Audio Sample (15s)</>
           )}
         </button>
       </div>
 
       {/* Audio Sample Presets */}
       <div className="space-y-2.5">
-        <span className="text-xs font-bold text-[#1e112a] flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-[#450c3f]" /> Or Test Real Scam Call Scenarios:
+        <span className="text-[11px] font-bold text-white/50 flex items-center gap-1.5 uppercase tracking-wider font-mono">
+          <Sparkles className="w-3.5 h-3.5 text-[#D8F828]" /> Or Test Real Scam Call Scenarios:
         </span>
 
         <div className="space-y-2">
@@ -219,17 +217,17 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
                 setSelectedPreset(key);
                 handleAnalyzePreset(key);
               }}
-              className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all shadow-xs ${
-                selectedPreset === key 
-                  ? 'bg-[#450c3f] text-[#f5fbda] border-[#450c3f]' 
-                  : 'bg-white text-[#1e112a] border-[#e5ebc5] hover:bg-[#f5fbda]/40'
-              }`}
+              className="w-full p-3.5 rounded-[18px] text-left flex items-center justify-between transition-all active:scale-[0.97]"
+              style={selectedPreset === key
+                ? { background: 'linear-gradient(135deg, rgba(216,248,40,0.18), rgba(168,204,24,0.1))', border: '1px solid rgba(216,248,40,0.35)' }
+                : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }
+              }
             >
               <div>
-                <p className={`text-xs font-bold ${selectedPreset === key ? 'text-white' : 'text-[#1e112a]'}`}>{item.title}</p>
-                <p className={`text-[10px] font-mono ${selectedPreset === key ? 'text-[#b9d175]' : 'text-[#5e4d6a]'}`}>{item.caller}</p>
+                <p className="text-[12px] font-bold text-white">{item.title}</p>
+                <p className="text-[10px] font-mono text-white/40 mt-0.5">{item.caller}</p>
               </div>
-              <Play className={`w-4 h-4 shrink-0 ${selectedPreset === key ? 'text-[#b9d175]' : 'text-[#450c3f]'}`} />
+              <Play className={`w-4 h-4 shrink-0 stroke-[2] ${selectedPreset === key ? 'text-[#D8F828]' : 'text-white/30'}`} />
             </button>
           ))}
         </div>
@@ -237,42 +235,42 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
 
       {/* Analysis Result Card */}
       {loading ? (
-        <div className="bg-white rounded-3xl p-6 border border-[#e5ebc5] text-center space-y-2 shadow-xs">
-          <RefreshCw className="w-6 h-6 text-[#450c3f] animate-spin mx-auto" />
-          <p className="text-xs font-bold text-[#1e112a]">Transcribing and evaluating coercion intent with AI...</p>
+        <div className="rounded-[24px] p-6 text-center space-y-2" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <RefreshCw className="w-6 h-6 text-[#D8F828] animate-spin mx-auto" />
+          <p className="text-[11.5px] font-bold text-white/70">Transcribing and evaluating coercion intent with AI...</p>
         </div>
       ) : result && (
-        <div className="bg-white rounded-3xl p-5 border border-rose-300 shadow-lg space-y-3.5 animate-slide-down">
+        <div className="rounded-[24px] p-5 space-y-3.5 animate-slide-down" style={{ background: 'rgba(232,84,107,0.08)', border: '1px solid rgba(232,84,107,0.3)' }}>
           {/* Top Threat Badge */}
           <div className="flex items-center justify-between">
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300">
+            <span className="px-2.5 py-1 rounded-full text-[9.5px] font-black uppercase tracking-wider" style={{ background: 'rgba(232,84,107,0.2)', border: '1px solid rgba(232,84,107,0.4)', color: '#F87396' }}>
               🚨 {result.primaryCategory?.replace(/_/g, ' ')}
             </span>
-            <span className="text-xs font-mono font-bold text-rose-700">
+            <span className="text-[11px] font-mono font-bold text-rose-400">
               Confidence: {result.confidenceScore}%
             </span>
           </div>
 
           {/* Transcribed Snippet */}
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#5e4d6a]">Transcript Excerpt:</span>
-            <p className="text-[11px] text-[#1e112a] italic font-mono bg-[#f5fbda]/60 p-3 rounded-2xl border border-[#d9efbd]">
+            <span className="text-[9px] font-bold uppercase text-white/35 font-mono tracking-wider">Transcript Excerpt:</span>
+            <p className="text-[10.5px] text-white/65 italic font-mono p-3 rounded-[14px]" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               "{result.transcribedSnippet}"
             </p>
           </div>
 
           {/* Instant AI Summary */}
-          <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 space-y-1">
-            <p className="text-xs font-bold text-rose-900">AI Threat Intent Summary:</p>
-            <p className="text-[11px] text-rose-800 leading-snug">{result.summary}</p>
+          <div className="p-3 rounded-[14px] space-y-1" style={{ background: 'rgba(232,84,107,0.12)', border: '1px solid rgba(232,84,107,0.25)' }}>
+            <p className="text-[10px] font-bold text-rose-300 uppercase tracking-wider">AI Threat Intent Summary:</p>
+            <p className="text-[11px] text-rose-200 leading-snug">{result.summary}</p>
           </div>
 
           {/* Action Plan Guidance */}
           <div className="space-y-1.5 pt-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5e4d6a]">Verix Protective Advisory:</p>
+            <p className="text-[9.5px] font-bold uppercase tracking-wider text-white/35 font-mono">Verix Protective Advisory:</p>
             {result.actionPlan?.map((step, idx) => (
-              <div key={idx} className="flex items-start gap-1.5 text-xs text-[#1e112a] font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div key={idx} className="flex items-start gap-1.5 text-[11px] text-white/70 font-medium">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 stroke-[2.5]" />
                 <span>{step}</span>
               </div>
             ))}
