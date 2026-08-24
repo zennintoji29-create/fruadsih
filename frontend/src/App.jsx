@@ -350,41 +350,38 @@ export default function App() {
     );
   };
 
-  // FULL SCREEN SPLASH IF ACTIVE
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
-  }
+  // ── 1. NATIVE ANDROID MOBILE APP ONLY (CAPACITOR RUNTIME) ──
+  if (Capacitor.isNativePlatform()) {
+    if (showSplash) {
+      return <SplashScreen onComplete={() => setShowSplash(false)} />;
+    }
 
-  // 1. FIRST-TIME PERMISSIONS & 4-DIGIT MPIN SETUP (AFTER LOGIN)
-  if (currentUser && needsPermissionsOnboarding) {
-    return (
-      <div className="h-[100dvh] w-full max-w-md mx-auto bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none">
-        <PermissionsOnboarding 
-          lang={currentLang}
-          onComplete={() => {
-            setNeedsPermissionsOnboarding(false);
-            setIsAppLocked(false);
-          }} 
-        />
-      </div>
-    );
-  }
+    if (currentUser && needsPermissionsOnboarding) {
+      return (
+        <div className="h-[100dvh] w-full max-w-md mx-auto bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none">
+          <PermissionsOnboarding 
+            lang={currentLang}
+            onComplete={() => {
+              setNeedsPermissionsOnboarding(false);
+              setIsAppLocked(false);
+            }} 
+          />
+        </div>
+      );
+    }
 
-  // 2. APP PIN LOCK SCREEN (ONLY AFTER ONBOARDED & MPIN IS CONFIGURED)
-  if (currentUser && isAppLocked) {
-    return (
-      <div className="h-[100dvh] w-full max-w-md mx-auto bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none">
-        <AppLockScreen 
-          currentLang={currentLang}
-          onUnlock={() => setIsAppLocked(false)} 
-          onForgotPin={handleLogout}
-        />
-      </div>
-    );
-  }
+    if (currentUser && isAppLocked) {
+      return (
+        <div className="h-[100dvh] w-full max-w-md mx-auto bg-[#f5fbda] flex flex-col overflow-hidden font-sans select-none">
+          <AppLockScreen 
+            currentLang={currentLang}
+            onUnlock={() => setIsAppLocked(false)} 
+            onForgotPin={handleLogout}
+          />
+        </div>
+      );
+    }
 
-  // NATIVE ANDROID / MOBILE FULL-SCREEN RENDERING
-  if (isMobileDevice) {
     return (
       <div className="h-[100dvh] w-full max-w-md mx-auto flex flex-col overflow-hidden font-sans select-none bg-[#090C10] shadow-2xl relative">
         <div className="flex-1 overflow-y-auto relative flex flex-col">
@@ -408,10 +405,10 @@ export default function App() {
     );
   }
 
-  // DESKTOP SIMULATOR WRAPPER FOR BROWSER DEMOS
+  // ── 2. DESKTOP BROWSER / SIMULATOR WRAPPER ──
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-between selection:bg-[#450c3f] selection:text-white font-sans">
-      <header className="border-b border-white/[0.08] bg-[#0D1117] sticky top-0 z-50 backdrop-blur-md px-6 py-3.5">
+    <div className="min-h-screen bg-[#07090E] flex flex-col justify-between selection:bg-[#00F0A0] selection:text-[#090C10] font-sans">
+      <header className="border-b border-white/[0.08] bg-[#0D1117] sticky top-0 z-50 backdrop-blur-md px-6 py-3.5 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#171E2B] border border-white/[0.12] flex items-center justify-center text-[#00F0A0] shadow-sm">

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Sliders, Shield, Bell, Globe, ArrowLeft, Check, Lock, Users, Plus, 
-  Smartphone, ShieldCheck, LogOut, ChevronDown, ChevronUp, KeyRound, Fingerprint 
+  Smartphone, ShieldCheck, LogOut, ChevronDown, ChevronUp, KeyRound, Fingerprint,
+  Building2, ChevronRight
 } from 'lucide-react';
 import { translations } from '../translations';
 import { BiometricAuth } from '@aparajita/capacitor-biometric-auth';
@@ -304,6 +305,33 @@ export default function SettingsScreen({ onBack, user, onUpdateUser, onLogout, c
           <span>₹1,00,000 (Max)</span>
         </div>
       </div>
+
+      {/* Institutional Bank Review Portal Link */}
+      <a
+        href="https://verix-bank.onrender.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded-[24px] p-4 flex items-center justify-between transition-all hover:bg-white/5 active:scale-[0.98] block"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0, 240, 160, 0.12) 0%, rgba(56, 189, 248, 0.06) 100%)',
+          border: '1px solid rgba(0, 240, 160, 0.25)',
+          textDecoration: 'none'
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[14px] flex items-center justify-center text-[#00F0A0]" style={{ background: 'rgba(0, 240, 160, 0.15)', border: '1px solid rgba(0, 240, 160, 0.3)' }}>
+            <Building2 className="w-5 h-5 stroke-[2.2]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h4 className="text-[12.5px] font-bold text-white leading-tight">Bank Review &amp; Nodal Desk</h4>
+              <span className="text-[9px] font-mono text-[#00F0A0] bg-[#00F0A0]/10 px-1.5 py-0.2 rounded border border-[#00F0A0]/20 font-bold">LIVE</span>
+            </div>
+            <p className="text-[10px] text-white/50 font-mono mt-0.5">verix-bank.onrender.com ↗</p>
+          </div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-[#00F0A0]" />
+      </a>
 
       {/* Save Settings Button */}
       <button
