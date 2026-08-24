@@ -23,7 +23,16 @@ import QrScannerModal from './components/QrScannerModal.jsx';
 import { translations } from './translations';
 
 export default function App() {
-  const [activePortal, setActivePortal] = useState('mobile'); // 'mobile' | 'bank'
+  const [activePortal, setActivePortal] = useState(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('portal') === 'mobile') return 'mobile';
+      if (urlParams.get('portal') === 'bank') return 'bank';
+      return window.innerWidth > 900 ? 'bank' : 'mobile';
+    } catch (e) {
+      return 'mobile';
+    }
+  });
   const [showSplash, setShowSplash] = useState(true);
   
   // Multi-Language State (Default English)
@@ -402,43 +411,45 @@ export default function App() {
   // DESKTOP SIMULATOR WRAPPER FOR BROWSER DEMOS
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-between selection:bg-[#450c3f] selection:text-white font-sans">
-      <header className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 px-4 py-3">
+      <header className="border-b border-white/[0.08] bg-[#0D1117] sticky top-0 z-50 backdrop-blur-md px-6 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-xl bg-[#450c3f] border border-[#b9d175]/40 text-[#b9d175]">
-              <Shield className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-[#171E2B] border border-white/[0.12] flex items-center justify-center text-[#00F0A0] shadow-sm">
+              <Shield className="w-5 h-5 stroke-[2.4]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold font-heading text-white text-base tracking-tight">ShieldX</span>
-                <span className="text-[10px] font-black uppercase font-mono px-2 py-0.5 rounded-full bg-[#b9d175]/20 text-[#b9d175] border border-[#b9d175]/40">
+                <span className="font-extrabold font-heading text-white text-base tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                  VERIX COMMAND CENTER
+                </span>
+                <span className="text-[10px] font-bold uppercase font-mono px-2 py-0.5 rounded-full bg-[#00F0A0]/15 text-[#00F0A0] border border-[#00F0A0]/30">
                   SIH S40
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 hidden sm:block">Real-Time UPI & Voice Phishing Cyber Defense</p>
+              <p className="text-[11px] text-[#8494A8] hidden sm:block">NPCI • I4C Real-Time Transaction Disputes &amp; Cyber Defense Portal</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
-            <button
-              onClick={() => setActivePortal('mobile')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activePortal === 'mobile' 
-                  ? 'bg-[#450c3f] text-[#b9d175] shadow-md border border-[#b9d175]/30' 
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Smartphone className="w-3.5 h-3.5" /> Mobile App Simulator
-            </button>
+          <div className="flex items-center gap-1.5 bg-[#090C10] p-1 rounded-xl border border-white/[0.08]">
             <button
               onClick={() => setActivePortal('bank')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all ${
                 activePortal === 'bank' 
-                  ? 'bg-[#450c3f] text-[#b9d175] shadow-md border border-[#b9d175]/30' 
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#171E2B] text-[#00F0A0] shadow-md border border-[#00F0A0]/30' 
+                  : 'text-[#8494A8] hover:text-white'
               }`}
             >
-              <Building2 className="w-3.5 h-3.5" /> Bank Review Portal
+              <Building2 className="w-4 h-4" /> Bank Review Desk
+            </button>
+            <button
+              onClick={() => setActivePortal('mobile')}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all ${
+                activePortal === 'mobile' 
+                  ? 'bg-[#171E2B] text-[#00F0A0] shadow-md border border-[#00F0A0]/30' 
+                  : 'text-[#8494A8] hover:text-white'
+              }`}
+            >
+              <Smartphone className="w-4 h-4" /> Mobile App View
             </button>
           </div>
         </div>
