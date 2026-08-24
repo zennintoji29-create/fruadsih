@@ -34,7 +34,7 @@ h1, h2, h3, h4, h5, .font-heading {
 }
 
 body {
-  background-color: #f5fbda;
+  background-color: #F7F8F2;
   color: var(--text-primary);
   min-height: 100vh;
   min-height: 100dvh;

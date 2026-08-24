@@ -18,30 +18,33 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
   ];
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#f5fbda] text-[#1e112a] px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-28 space-y-4 font-sans selection:bg-[#450c3f] selection:text-white">
-      {/* Top Header - Single Unified Settings / Profile Entry */}
-      <div className="flex items-center justify-between pb-1">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#F7F8F2] text-slate-900 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-28 space-y-3.5 font-sans selection:bg-[#D8F828] selection:text-[#1A0317] w-full">
+      {/* ── 1. Top Header: Modern Clean Status & Tools ── */}
+      <div className="flex items-center justify-between pt-0.5 pb-0.5">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-2xl bg-[#450c3f] text-[#b9d175] shadow-md shadow-[#450c3f]/20">
-            <Shield className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#380932] to-[#20031C] text-[#D8F828] shadow-md shadow-[#380932]/20 flex items-center justify-center shrink-0">
+            <Shield className="w-5 h-5 stroke-[2.4]" />
           </div>
           <div>
-            <span className="font-extrabold font-heading text-[#450c3f] text-lg tracking-tight block leading-none">Verix</span>
-            <span className="text-[10px] font-mono text-[#6b8f1a] font-bold flex items-center gap-1 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#6b8f1a] animate-pulse"></span>
-              {t.activeProtection || 'ACTIVE PROTECTION'}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold font-heading text-[#260623] text-xl tracking-tight leading-none">Verix</span>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-300/50 text-[9.5px] font-mono font-bold uppercase tracking-wider shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                {t.activeProtection || 'ACTIVE PROTECTION'}
+              </span>
+            </div>
+            <span className="text-[11px] text-slate-500 font-medium block mt-0.5">Real-Time Cyber Defense</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Quick Language Selector */}
-          <div className="relative flex items-center bg-white/90 backdrop-blur-xs border border-[#e5ebc5] rounded-2xl px-2.5 py-1.5 shadow-2xs">
-            <Globe className="w-3.5 h-3.5 text-[#450c3f] mr-1.5" />
+          {/* Quick Language Selector Pill */}
+          <div className="relative flex items-center bg-white border border-slate-200/80 rounded-full px-2.5 py-1.5 shadow-2xs">
+            <Globe className="w-3.5 h-3.5 text-[#380932] mr-1" />
             <select
               value={currentLang}
               onChange={(e) => onLanguageChange && onLanguageChange(e.target.value)}
-              className="bg-transparent text-xs font-bold text-[#450c3f] focus:outline-none cursor-pointer pr-1"
+              className="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer pr-1"
             >
               {languages.map(l => (
                 <option key={l.code} value={l.code}>{l.label}</option>
@@ -49,117 +52,126 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
             </select>
           </div>
 
-          {/* Single Unified Settings Button */}
+          {/* Settings Button */}
           <button 
             onClick={() => onNavigate('settings')}
             title="Settings & Profile"
-            className="w-10 h-10 rounded-2xl bg-[#450c3f] hover:bg-[#32082e] text-[#b9d175] flex items-center justify-center font-bold text-xs shadow-md shadow-[#450c3f]/20 active:scale-95 transition-all"
+            className="w-9 h-9 rounded-full bg-white hover:bg-slate-100 border border-slate-200/80 text-slate-700 flex items-center justify-center font-bold text-xs shadow-2xs active:scale-95 transition-all"
           >
             <SlidersHorizontal className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Main Hero Action: Run Pre-Payment Threat Check */}
-      <div className="bg-gradient-to-br from-[#450c3f] to-[#2a0626] rounded-3xl p-5 text-[#f5fbda] space-y-4 shadow-xl shadow-[#450c3f]/25 border border-[#450c3f]/30 relative overflow-hidden">
+      {/* ── 2. Hero Card: Deep Royal Plum with Radiant High-End CTA ── */}
+      <div className="bg-gradient-to-br from-[#380932] via-[#2A0525] to-[#180216] rounded-3xl p-5 text-white space-y-3.5 shadow-xl shadow-[#2A0525]/30 border border-white/10 relative overflow-hidden">
         {/* Subtle decorative glow */}
-        <div className="absolute -right-8 -top-8 w-28 h-28 bg-[#b9d175]/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -right-8 -top-8 w-32 h-32 bg-[#D8F828]/15 rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono font-black tracking-wider text-[#b9d175] uppercase px-2.5 py-1 rounded-full bg-[#b9d175]/15 border border-[#b9d175]/30">
+          <span className="text-[9.5px] font-mono font-bold tracking-wider text-[#D8F828] uppercase px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs inline-flex items-center gap-1.5">
             ⚡ INSTANT THREAT INTERCEPTOR
           </span>
-          <span className="flex h-2.5 w-2.5 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#b9d175] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#b9d175]"></span>
+          <span className="flex h-2 w-2 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D8F828] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D8F828]"></span>
           </span>
         </div>
 
         <div>
-          <h2 className="text-xl font-black font-heading text-white tracking-tight leading-snug">
+          <h2 className="text-xl font-bold font-heading text-white tracking-tight leading-snug">
             {t.runPreCheck || 'Run Pre-Payment Threat Check'}
           </h2>
-          <p className="text-xs text-[#f5fbda]/80 mt-1 leading-relaxed">
+          <p className="text-xs text-white/75 mt-1 leading-relaxed font-normal">
             {t.dashboardSubtitle || 'Real-time AI cyber defense against fraudulent VPAs, digital arrest, and extortion.'}
           </p>
         </div>
 
+        {/* ── World-Class Radiant Lime CTA Button ── */}
         <button
           onClick={() => onNavigate('upi-check')}
-          className="w-full py-3.5 bg-[#b9d175] hover:bg-[#a8c75d] text-[#450c3f] rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-lg active:scale-98 transition-all"
+          className="w-full h-[52px] min-h-[52px] bg-gradient-to-r from-[#D8F828] to-[#C4EB1A] hover:brightness-105 text-[#1A0317] rounded-2xl text-sm font-black flex items-center justify-center gap-2.5 shadow-[0_8px_20px_-4px_rgba(216,248,40,0.45)] active:scale-[0.98] transition-all duration-150 tracking-wide uppercase"
         >
-          <Search className="w-4 h-4 text-[#450c3f] stroke-[2.5]" />
+          <Search className="w-4.5 h-4.5 text-[#1A0317] stroke-[2.8]" />
           <span>{t.runPreCheck || 'Run Pre-Payment Threat Check'}</span>
         </button>
       </div>
 
-      {/* Prominent & Beautiful Core Action Cards: QR Scan & Voice AI */}
+      {/* ── 3. Feature Cards: High-End White Cards with Gradient Icon Badges ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        {/* Action 1: Scan UPI QR Code (Bigger & Richer) */}
+        {/* Card 1: Scan UPI QR Code */}
         <button
           onClick={() => onNavigate('home', { openQr: true })}
-          className="group relative p-5 rounded-3xl bg-white border border-[#e5ebc5] hover:border-[#b9d175] text-left flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md active:scale-98 transition-all overflow-hidden"
+          className="group relative p-4.5 rounded-3xl bg-white border border-slate-200/70 hover:border-emerald-300 text-left flex flex-col justify-between space-y-3.5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-md active:scale-[0.98] transition-all overflow-hidden"
         >
           <div className="flex items-center justify-between w-full">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-[#d9efbd] to-[#b9d175] text-[#450c3f] shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-800 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
               <QrCode className="w-6 h-6 stroke-[2.2]" />
             </div>
-            <span className="text-[10px] font-bold text-[#6b8f1a] bg-[#d9efbd]/60 px-2.5 py-1 rounded-full border border-[#d9efbd]">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
               Instant Scan
             </span>
           </div>
 
           <div>
-            <h4 className="text-sm font-black font-heading text-[#1e112a] group-hover:text-[#450c3f] transition-colors flex items-center justify-between">
-              {t.scanQr || 'Scan UPI QR'}
-              <ChevronRight className="w-4 h-4 text-[#5e4d6a] group-hover:translate-x-1 transition-transform" />
-            </h4>
-            <p className="text-[11px] text-[#5e4d6a] font-medium mt-1 leading-relaxed">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold font-heading text-slate-900 group-hover:text-[#260623] transition-colors">
+                {t.scanQr || 'Scan UPI QR'}
+              </h4>
+              <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-700 group-hover:bg-slate-100 transition-all">
+                <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+              </div>
+            </div>
+            <p className="text-[11.5px] text-slate-500 font-normal mt-1 leading-relaxed">
               Scan & verify any merchant or personal QR code against national cybercrime registries.
             </p>
           </div>
         </button>
 
-        {/* Action 2: AI Voice & Audio Scan (Bigger & Richer) */}
+        {/* Card 2: AI Voice & Audio Scan */}
         <button
           onClick={() => onNavigate('audio-analyzer')}
-          className="group relative p-5 rounded-3xl bg-white border border-[#e5ebc5] hover:border-[#b9d175] text-left flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md active:scale-98 transition-all overflow-hidden"
+          className="group relative p-4.5 rounded-3xl bg-white border border-slate-200/70 hover:border-rose-300 text-left flex flex-col justify-between space-y-3.5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-md active:scale-[0.98] transition-all overflow-hidden"
         >
           <div className="flex items-center justify-between w-full">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-[#d9efbd] to-[#b9d175] text-[#450c3f] shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-50 text-rose-700 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
               <Mic className="w-6 h-6 stroke-[2.2]" />
             </div>
-            <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/60">
               Coercion AI
             </span>
           </div>
 
           <div>
-            <h4 className="text-sm font-black font-heading text-[#1e112a] group-hover:text-[#450c3f] transition-colors flex items-center justify-between">
-              {t.audioScan || 'AI Audio Scan'}
-              <ChevronRight className="w-4 h-4 text-[#5e4d6a] group-hover:translate-x-1 transition-transform" />
-            </h4>
-            <p className="text-[11px] text-[#5e4d6a] font-medium mt-1 leading-relaxed">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold font-heading text-slate-900 group-hover:text-[#260623] transition-colors">
+                {t.audioScan || 'AI Audio Scan'}
+              </h4>
+              <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-700 group-hover:bg-slate-100 transition-all">
+                <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+              </div>
+            </div>
+            <p className="text-[11.5px] text-slate-500 font-normal mt-1 leading-relaxed">
               Record 30s of call audio to detect digital arrest threats, fake police pressure & coercion.
             </p>
           </div>
         </button>
       </div>
 
-      {/* Quick Action: Live Scam Call Simulation */}
-      <div className="bg-white rounded-3xl p-4 border border-[#e5ebc5] shadow-xs flex items-center justify-between gap-3">
+      {/* ── 4. Action Card: Live Scam Call Simulation (Refined Rose-Coral) ── */}
+      <div className="bg-white rounded-3xl p-4 border border-slate-200/70 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-rose-100 text-rose-700 shrink-0">
-            <PhoneCall className="w-5 h-5" />
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-100 to-red-50 text-rose-600 flex items-center justify-center shadow-xs shrink-0">
+            <PhoneCall className="w-5 h-5 stroke-[2.2]" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-[#1e112a]">Test Scam Call Simulation</h4>
-            <p className="text-[10px] text-[#5e4d6a]">Test Verix In-Call Defense & Floating Overlay</p>
+            <h4 className="text-xs font-bold text-slate-900 font-heading">Test Scam Call Simulation</h4>
+            <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">Test Verix In-Call Defense & Floating Overlay</p>
           </div>
         </div>
         <button
           onClick={() => onTriggerCallSimulation && onTriggerCallSimulation('+919876543210')}
-          className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm active:scale-95 transition-all shrink-0"
+          className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold shadow-[0_4px_12px_rgba(225,29,72,0.25)] active:scale-95 transition-all shrink-0 tracking-wide"
         >
           Simulate Call
         </button>
@@ -167,3 +179,4 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
     </div>
   );
 }
+
