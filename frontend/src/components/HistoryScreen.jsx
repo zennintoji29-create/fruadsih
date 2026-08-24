@@ -133,13 +133,14 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
             const formatted = appealsData.appeals.map(a => {
               const isApproved = a.status === 'APPROVED_WHITELISTED' || a.status === 'APPROVED';
               const isRejected = a.status === 'REJECTED';
+              const id = a.appealId || a.ticketId || a.id || `VRX-REV-${Math.floor(100000 + Math.random() * 900000)}`;
               return {
-                id: a.ticketId,
-                vpa: a.vpa,
-                amount: a.amount,
-                note: a.note,
-                submittedAt: a.createdAt ? new Date(a.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
-                status: a.status,
+                id,
+                vpa: a.vpa || 'N/A',
+                amount: a.amount || '0',
+                note: a.note || a.reason || 'User dispute ticket',
+                submittedAt: a.submittedAt || a.createdAt ? new Date(a.submittedAt || a.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+                status: a.status || 'PENDING_REVIEW',
                 statusLabel: isApproved ? 'Cleared & Whitelisted' : (isRejected ? 'Transfer Blocked by Compliance' : 'Pending Admin Review'),
                 statusColor: isApproved 
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
@@ -426,7 +427,11 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
       {activeTab === 'tickets' && (
         <div className="space-y-3">
           {adminTickets
-            .filter(item => item.id.toLowerCase().includes(searchQuery.toLowerCase()) || item.vpa.toLowerCase().includes(searchQuery.toLowerCase()))
+            .filter(item => 
+              ((item.id || '').toLowerCase().includes((searchQuery || '').toLowerCase())) || 
+              ((item.vpa || '').toLowerCase().includes((searchQuery || '').toLowerCase())) ||
+              ((item.note || '').toLowerCase().includes((searchQuery || '').toLowerCase()))
+            )
             .map((ticket) => (
               <div key={ticket.id} className="rounded-[24px] p-4 space-y-3 animate-fade-in" style={glassCard}>
                 <div className="flex items-start justify-between">

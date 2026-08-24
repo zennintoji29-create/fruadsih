@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { 
   Smartphone, Building2, Shield, Bell, Sparkles, 
@@ -88,6 +89,29 @@ export default function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // ── Hardware Android Back Button Handler ──
+  useEffect(() => {
+    let handler;
+    if (Capacitor.isPluginAvailable('App')) {
+      handler = CapacitorApp.addListener('backButton', () => {
+        if (showQrScanner) {
+          setShowQrScanner(false);
+        } else if (showCallSimulation) {
+          setShowCallSimulation(false);
+        } else if (currentScreen !== 'home') {
+          setCurrentScreen('home');
+        } else {
+          CapacitorApp.exitApp();
+        }
+      });
+    }
+    return () => {
+      if (handler && handler.remove) {
+        handler.remove();
+      }
+    };
+  }, [currentScreen, showQrScanner, showCallSimulation]);
 
   const handleLanguageChange = (lang) => {
     setCurrentLang(lang);
