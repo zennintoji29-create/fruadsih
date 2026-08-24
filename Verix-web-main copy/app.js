@@ -366,13 +366,11 @@ function initRealtimeSseStream() {
     }
   }
 
-  // 2. Continuous Polling Fallback (ensures 100% receipt from live backend and local server)
+  // 2. Continuous Polling Fallback (ensures 100% receipt even across firewalls / file:// mode)
   if (!intentPollingTimer) {
     intentPollingTimer = setInterval(async () => {
       try {
-        // Query live backend first, then local web endpoint
-        const targetUrl = `${API_BASE_URL}/api/v1/intent/latest`;
-        const res = await fetch(targetUrl, { cache: 'no-store' });
+        const res = await fetch(`${WEB_BASE_URL}/api/v1/intent/latest`, { cache: 'no-store' });
         if (res.ok) {
           const result = await res.json();
           if (result.intents && Array.isArray(result.intents)) {

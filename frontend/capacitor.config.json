@@ -1,0 +1,12 @@
+{
+  "appId": "com.fraudshield.app",
+  "appName": "Verix",
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "241694440805-475253818972.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": false
+    }
+  }
+}
