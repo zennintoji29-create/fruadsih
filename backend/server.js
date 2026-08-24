@@ -88,7 +88,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/risk', riskRoutes);
 app.use('/api/v1/voice-phish', voicePhishRoutes);
 app.use('/api/v1/threat-intel', threatRoutes);
-app.use('/api/v1/institution', institutionRoutes);
+app.use(['/api/v1/institution', '/api/v1/appeals', '/api/v1/appeal', '/api/v1/tickets', '/api/v1/ticket'], institutionRoutes);
 
 // Global 404 handler
 app.use((req, res) => {

@@ -32,22 +32,50 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
   const [countdownSeconds, setCountdownSeconds] = useState(300); // 5 min timer
   const [ticketId, setTicketId] = useState('');
 
-  // Countdown timer for Admin Review
+  // Countdown timer & Live Backend Polling for Admin Review
   useEffect(() => {
-    let interval = null;
+    let timerInterval = null;
+    let pollInterval = null;
+
     if (adminReviewState === 'waiting') {
-      interval = setInterval(() => {
+      // 1. Countdown timer
+      timerInterval = setInterval(() => {
         setCountdownSeconds((prev) => {
           if (prev <= 1) {
-            clearInterval(interval);
+            clearInterval(timerInterval);
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
+
+      // 2. Real-time Live Backend Polling for Ticket Resolution
+      if (ticketId) {
+        pollInterval = setInterval(async () => {
+          try {
+            const res = await fetch(`${backendUrl}/api/v1/institution/appeals/${ticketId}`, { cache: 'no-store' });
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.appeal?.status === 'APPROVED_WHITELISTED' || data?.appeal?.status === 'APPROVED') {
+                clearInterval(pollInterval);
+                clearInterval(timerInterval);
+                setAdminReviewState('approved');
+              } else if (data?.appeal?.status === 'REJECTED') {
+                clearInterval(pollInterval);
+                clearInterval(timerInterval);
+                setAdminReviewState('rejected');
+              }
+            }
+          } catch (e) {}
+        }, 2000);
+      }
     }
-    return () => clearInterval(interval);
-  }, [adminReviewState]);
+
+    return () => {
+      if (timerInterval) clearInterval(timerInterval);
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [adminReviewState, ticketId, backendUrl]);
 
   const handleRunCheck = async () => {
     if (!vpa.trim()) {
@@ -289,6 +317,8 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
       const newEntry = {
         id: generatedId,
         vpa: vpa || 'Unknown VPA',
+        amount: amount || '0',
+        note: note || '',
         submittedAt: 'Just now',
         status: 'PENDING_REVIEW',
         statusLabel: 'Pending Admin Review',
@@ -298,16 +328,21 @@ export default function UpiCheckScreen({ onBack, backendUrl, user, initialPreset
       localStorage.setItem('shieldx_tickets_history', JSON.stringify([newEntry, ...existing]));
     } catch (e) {}
 
-    // Notify backend if available
+    // Send appeal to backend Institution API & Web Dashboard
     try {
-      fetch(`${backendUrl}/api/v1/threat-intel/report`, {
+      fetch(`${backendUrl}/api/v1/institution/appeal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          identifier: vpa,
-          details: `Admin review ticket requested: ${note}`,
-          category: 'PENDING_ADMIN_REVIEW',
-          reportedBy: user?.name || 'Verix User'
+          ticketId: generatedId,
+          assessmentId: result?.assessmentId || generatedId,
+          vpa: vpa ? vpa.trim() : 'Unknown VPA',
+          amount: Number(amount) || 0,
+          note: note ? note.trim() : 'Urgent transfer request',
+          appellantType: 'CONSUMER',
+          contactEmail: user?.email || user?.phone || 'user@verix.gov.in',
+          reason: `Dispute / Admin review ticket requested for transfer of ₹${amount || 0} to ${vpa}. Note: ${note || 'None'}`,
+          evidenceDescription: `Caller: ${isOnCall ? activeCaller : 'None'}`
         })
       }).catch(() => {});
     } catch (e) {}

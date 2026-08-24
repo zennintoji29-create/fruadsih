@@ -212,11 +212,11 @@
       "identifier": "cbi.verification@paytm",
       "name": "Reported Digital Arrest Extortion Target",
       "category": "Digital Arrest Extortion",
-      "riskScore": 85,
-      "isBlacklisted": true,
+      "riskScore": 15,
+      "isBlacklisted": false,
       "source": "USER_REPORT",
       "reportCount": 1,
-      "details": "Arrest warrant threat received via call",
+      "details": "False Positive Approved: Verified legitimate merchant by Bank Officer BANK_OFFICER_042.",
       "tags": [
         "user_reported",
         "digital arrest extortion"
@@ -358,9 +358,101 @@
         "biometricVerified": true,
         "confirmedAt": "2026-08-22T22:05:32.952Z"
       }
+    },
+    "risk-eval-63198c16-6407-4379-a6e9-d5cfef4729f5": {
+      "assessmentId": "risk-eval-63198c16-6407-4379-a6e9-d5cfef4729f5",
+      "vpa": "cbi.verification@paytm",
+      "amount": 45000,
+      "riskScore": 100,
+      "riskLevel": "CRITICAL_BLOCKED",
+      "recommendedAction": "RESTRICT_BLOCK",
+      "isBlocked": true,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 85,
+        "coercionRisk": 60,
+        "deviceRisk": 0,
+        "amountRisk": 65
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (100/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "COERCIVE_MESSAGE_PATTERN",
+            "title": "Extortion / Impersonation In Message",
+            "description": "Payment message contains high-risk police impersonation / extortion indicators: \"bail, deposit, cbi\""
+          },
+          {
+            "severity": "CRITICAL",
+            "code": "KNOWN_SCAMMER_MATCH",
+            "title": "Known Scammer Record Found",
+            "description": "This recipient (cbi.verification@paytm) has been reported 1 times in national cybercrime databases."
+          },
+          {
+            "severity": "HIGH",
+            "code": "ACTIVE_COERCION_CALL",
+            "title": "Active Call / Social Engineering Coercion",
+            "description": "You are on an active call during this payment. Scammers frequently keep victims on call to prevent independent verification."
+          },
+          {
+            "severity": "MEDIUM",
+            "code": "USER_THRESHOLD_EXCEEDED",
+            "title": "Safety Limit Exceeded",
+            "description": "Amount (₹45000) exceeds your configured safety threshold of ₹10000."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": false,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": {
+        "id": "threat-1787436332955",
+        "type": "VPA",
+        "identifier": "cbi.verification@paytm",
+        "name": "Reported Digital Arrest Extortion Target",
+        "category": "Digital Arrest Extortion",
+        "riskScore": 15,
+        "isBlacklisted": false,
+        "source": "USER_REPORT",
+        "reportCount": 1,
+        "details": "False Positive Approved: Verified legitimate merchant by Bank Officer BANK_OFFICER_042.",
+        "tags": [
+          "user_reported",
+          "digital arrest extortion"
+        ],
+        "reportedAt": "2026-08-22T22:05:32.955Z"
+      },
+      "deviceContext": {
+        "isOnActiveCall": true,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-24T12:33:25.368Z"
     }
   },
   "callReports": {},
-  "falsePositiveAppeals": {},
-  "lastSaved": "2026-08-22T22:05:32.955Z"
+  "falsePositiveAppeals": {
+    "VRX-REV-1787574805377": {
+      "appealId": "VRX-REV-1787574805377",
+      "assessmentId": "risk-eval-63198c16-6407-4379-a6e9-d5cfef4729f5",
+      "vpa": "cbi.verification@paytm",
+      "amount": 45000,
+      "note": "Urgent CBI security bail deposit",
+      "appellantType": "CONSUMER",
+      "contactEmail": "subhash@example.com",
+      "reason": "User claims this is an emergency verification.",
+      "evidenceDescription": "Caller verified",
+      "status": "APPROVED_WHITELISTED",
+      "submittedAt": "2026-08-24T12:33:25.382Z",
+      "reviewerNotes": "Verified genuine emergency. Cleared by Senior Officer #042",
+      "resolvedAt": "2026-08-24T12:33:25.391Z",
+      "resolvedBy": "BANK_OFFICER_042"
+    }
+  },
+  "lastSaved": "2026-08-24T12:33:25.391Z"
 }

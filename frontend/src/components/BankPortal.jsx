@@ -88,7 +88,9 @@ export default function BankPortal({ backendUrl }) {
 
   useEffect(() => {
     fetchPortalData();
-  }, []);
+    const interval = setInterval(fetchPortalData, 3000);
+    return () => clearInterval(interval);
+  }, [backendUrl]);
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 space-y-6 text-[#1e112a] bg-[#f5fbda]/40 rounded-3xl border border-[#e5ebc5] animate-fade-in font-sans selection:bg-[#450c3f] selection:text-white">

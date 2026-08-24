@@ -16,11 +16,13 @@ export class InstitutionController {
         });
       }
 
-      const appealId = `appeal-${uuidv4()}`;
+      const appealId = req.body.ticketId || `VRX-REV-${Math.floor(100000 + Math.random() * 900000)}`;
       const newAppeal = {
         appealId,
         assessmentId: assessmentId || null,
         vpa: vpa ? vpa.trim().toLowerCase() : null,
+        amount: Number(req.body.amount) || 0,
+        note: req.body.note || '',
         appellantType: appellantType || 'CONSUMER', // 'CONSUMER' | 'MERCHANT' | 'BENEFICIARY'
         contactEmail: contactEmail || 'user@example.com',
         reason: reason || 'Transaction was legitimate and flagged by mistake.',
@@ -37,8 +39,25 @@ export class InstitutionController {
       return res.status(201).json({
         success: true,
         message: 'False positive appeal submitted. Bank compliance team will review within 24 hours.',
-        appeal: newAppeal
+        appeal: newAppeal,
+        ticketId: appealId
       });
+    } catch (error) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Get single Appeal / Ticket by ID (for Mobile App live polling)
+   */
+  static async getAppealById(req, res) {
+    try {
+      const { appealId } = req.params;
+      const appeal = db.falsePositiveAppeals.get(appealId);
+      if (!appeal) {
+        return res.status(404).json({ success: false, message: 'Ticket not found' });
+      }
+      return res.status(200).json({ success: true, appeal });
     } catch (error) {
       return res.status(500).json({ success: false, error: error.message });
     }
