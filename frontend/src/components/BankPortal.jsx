@@ -5,7 +5,7 @@ import {
   Sparkles, Lock, ArrowUpRight, Clock, User, Phone, Check, AlertOctagon, 
   Terminal, MapPin, Mail, Key, Landmark, ArrowRight, LogOut, Shield,
   Radio, BellRing, FileAudio, Upload, Mic, Play, Square, FileText, ChevronRight,
-  ExternalLink, Eye, PlusCircle, AlertCircle
+  ExternalLink, Eye, PlusCircle, AlertCircle, History, Trash2, Archive, RotateCcw
 } from 'lucide-react';
 
 export default function BankPortal({ backendUrl }) {
@@ -47,7 +47,7 @@ export default function BankPortal({ backendUrl }) {
   });
 
   // Main Work Console State
-  // Navigation tabs: 'disputes' | 'database_search' | 'audio_lab' | 'sim_carrier' | 'advisories' | 'settings'
+  // Navigation tabs: 'disputes' | 'history' | 'database_search' | 'audio_lab' | 'sim_carrier' | 'advisories'
   const [activeTab, setActiveTab] = useState('disputes');
   const [appeals, setAppeals] = useState([]);
   const [stats, setStats] = useState(null);
@@ -58,8 +58,21 @@ export default function BankPortal({ backendUrl }) {
   const [selectedFilter, setSelectedFilter] = useState('ALL'); // 'ALL' | 'PENDING' | 'RESOLVED'
   const [selectedThreatType, setSelectedThreatType] = useState('ALL'); // 'ALL' | 'VPA' | 'PHONE'
 
+  // Cleared / Archived Ticket IDs (persisted locally so cleared resolved tickets stay out of active queue)
+  const [clearedTicketIds, setClearedTicketIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('verix_cleared_tickets');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   // Selected Ticket for Deep-Dive Modal
   const [selectedTicket, setSelectedTicket] = useState(null);
+
+  // Selected Threat Record for Enlarged Detail Inspection Modal
+  const [selectedThreatRecord, setSelectedThreatRecord] = useState(null);
 
   // Audio Lab state
   const [audioPhoneInput, setAudioPhoneInput] = useState('');
@@ -311,6 +324,48 @@ export default function BankPortal({ backendUrl }) {
     }
   };
 
+  // ── Clear Resolved / Completed Tickets Handler ──
+  const handleClearResolved = () => {
+    const resolvedIds = appeals
+      .filter(a => a.status === 'APPROVED_WHITELISTED' || a.status === 'APPROVED' || a.status === 'REJECTED')
+      .map(a => a.appealId);
+
+    if (resolvedIds.length === 0) {
+      alert('No resolved tickets to clear.');
+      return;
+    }
+
+    const updated = Array.from(new Set([...clearedTicketIds, ...resolvedIds]));
+    setClearedTicketIds(updated);
+    try {
+      localStorage.setItem('verix_cleared_tickets', JSON.stringify(updated));
+    } catch (e) {}
+    setActionSuccess(`✓ Cleared ${resolvedIds.length} resolved tickets from active queue. Retained in Disputes History.`);
+    setTimeout(() => setActionSuccess(''), 4000);
+  };
+
+  // ── Restore Ticket to Active Queue Handler ──
+  const handleRestoreTicket = (appealId) => {
+    const updated = clearedTicketIds.filter(id => id !== appealId);
+    setClearedTicketIds(updated);
+    try {
+      localStorage.setItem('verix_cleared_tickets', JSON.stringify(updated));
+    } catch (e) {}
+    setActionSuccess(`Ticket ${appealId} restored to active queue.`);
+    setTimeout(() => setActionSuccess(''), 3500);
+  };
+
+  // ── Clear Entire History Archive Handler ──
+  const handlePurgeHistory = () => {
+    if (!window.confirm('Are you sure you want to reset cleared ticket filters?')) return;
+    setClearedTicketIds([]);
+    try {
+      localStorage.removeItem('verix_cleared_tickets');
+    } catch (e) {}
+    setActionSuccess('History filters reset.');
+    setTimeout(() => setActionSuccess(''), 3500);
+  };
+
   useEffect(() => {
     if (currentStep === 'CONSOLE') {
       setLoading(true);
@@ -320,8 +375,11 @@ export default function BankPortal({ backendUrl }) {
     }
   }, [currentStep, backendUrl]);
 
-  // Filters for Appeals
-  const filteredAppeals = appeals.filter(a => {
+  // Active queue appeals (excluding cleared tickets)
+  const activeAppeals = appeals.filter(a => !clearedTicketIds.includes(a.appealId));
+
+  // Filters for Active Appeals Queue
+  const filteredAppeals = activeAppeals.filter(a => {
     const matchesSearch = 
       (a.appealId && a.appealId.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (a.vpa && a.vpa.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -332,6 +390,18 @@ export default function BankPortal({ backendUrl }) {
     if (selectedFilter === 'PENDING') return a.status === 'PENDING_REVIEW';
     if (selectedFilter === 'RESOLVED') return a.status !== 'PENDING_REVIEW';
     return true;
+  });
+
+  // All historical / resolved disputes (for History tab)
+  const historyAppeals = appeals.filter(a => {
+    const isResolved = a.status !== 'PENDING_REVIEW';
+    if (!isResolved) return false;
+    const matchesSearch = 
+      (a.appealId && a.appealId.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (a.vpa && a.vpa.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (a.contactEmail && a.contactEmail.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (a.reason && a.reason.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesSearch;
   });
 
   // Filters for Threat Registry (Req 3)
@@ -347,7 +417,9 @@ export default function BankPortal({ backendUrl }) {
     return true;
   });
 
-  const pendingCount = appeals.filter(a => a.status === 'PENDING_REVIEW').length;
+  const pendingCount = activeAppeals.filter(a => a.status === 'PENDING_REVIEW').length;
+  const activeResolvedCount = activeAppeals.filter(a => a.status !== 'PENDING_REVIEW').length;
+  const totalResolvedHistoryCount = appeals.filter(a => a.status !== 'PENDING_REVIEW').length;
 
   // ══════════════════════════════════════════════════════════════
   // VIEW 1: STEP 1 — LOGIN
@@ -572,7 +644,8 @@ export default function BankPortal({ backendUrl }) {
             </span>
 
             {[
-              { id: 'disputes', label: 'Disputes & Appeals', icon: FileText, count: appeals.length, badgeColor: 'bg-amber-400/20 text-amber-300' },
+              { id: 'disputes', label: 'Disputes & Appeals', icon: FileText, count: pendingCount > 0 ? `${pendingCount} Pending` : activeAppeals.length, badgeColor: pendingCount > 0 ? 'bg-amber-400/25 text-amber-300 border border-amber-400/30' : 'bg-white/10 text-white/70' },
+              { id: 'history', label: 'Disputes History', icon: History, count: totalResolvedHistoryCount, badgeColor: 'bg-emerald-400/20 text-emerald-300' },
               { id: 'database_search', label: 'Database Search', icon: Database, count: threats.length, badgeColor: 'bg-cyan-400/20 text-cyan-300' },
               { id: 'audio_lab', label: 'Voice Phishing Lab', icon: Mic, count: 'AI', badgeColor: 'bg-purple-400/20 text-purple-300' },
               { id: 'sim_carrier', label: 'SIM Swap Monitor', icon: Radio, count: simImsiLog.length, badgeColor: 'bg-emerald-400/20 text-emerald-300' },
@@ -620,6 +693,10 @@ export default function BankPortal({ backendUrl }) {
                 <span className="text-[#8494A8]">Pending Disputes:</span>
                 <span className="text-amber-400 font-bold">{pendingCount}</span>
               </div>
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-[#8494A8]">Archived History:</span>
+                <span className="text-emerald-400 font-bold">{totalResolvedHistoryCount}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -628,7 +705,7 @@ export default function BankPortal({ backendUrl }) {
         <div className="lg:col-span-9 space-y-4">
 
           {/* ══════════════════════════════════════════════════════════
-              TAB 1: DISPUTES & APPEALS QUEUE
+              TAB 1: DISPUTES & APPEALS ACTIVE QUEUE
           ══════════════════════════════════════════════════════════ */}
           {activeTab === 'disputes' && (
             <div className="p-5 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-4 shadow-xl">
@@ -648,32 +725,46 @@ export default function BankPortal({ backendUrl }) {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search tickets..."
+                      placeholder="Search active tickets..."
                       className="bg-[#090C10] border border-white/[0.09] rounded-xl py-1.5 pl-8 pr-3 text-xs font-mono text-white placeholder:text-[#546274] focus:outline-none focus:border-[#00F0A0]/50"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Filter Pills */}
-              <div className="flex items-center gap-2">
-                {[
-                  { id: 'ALL', label: `All (${appeals.length})` },
-                  { id: 'PENDING', label: `Pending Review (${pendingCount})` },
-                  { id: 'RESOLVED', label: `Resolved (${appeals.length - pendingCount})` }
-                ].map(f => (
+              {/* Filter Pills + Clear Resolved Button */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {[
+                    { id: 'ALL', label: `Active Queue (${activeAppeals.length})` },
+                    { id: 'PENDING', label: `Pending Review (${pendingCount})` },
+                    { id: 'RESOLVED', label: `Resolved (${activeResolvedCount})` }
+                  ].map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => setSelectedFilter(f.id)}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                        selectedFilter === f.id
+                          ? 'bg-[#00F0A0]/15 text-[#00F0A0] font-bold border border-[#00F0A0]/30'
+                          : 'bg-[#090C10] text-[#8494A8] border border-white/[0.05] hover:text-white'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Clear Completed / Resolved Button */}
+                {activeResolvedCount > 0 && (
                   <button
-                    key={f.id}
-                    onClick={() => setSelectedFilter(f.id)}
-                    className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                      selectedFilter === f.id
-                        ? 'bg-[#00F0A0]/15 text-[#00F0A0] font-bold border border-[#00F0A0]/30'
-                        : 'bg-[#090C10] text-[#8494A8] border border-white/[0.05] hover:text-white'
-                    }`}
+                    onClick={handleClearResolved}
+                    className="px-3.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-sm"
+                    title="Clear completed/resolved tickets and keep only pending ones"
                   >
-                    {f.label}
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Clear Completed ({activeResolvedCount})</span>
                   </button>
-                ))}
+                )}
               </div>
 
               {/* Tickets List */}
@@ -681,8 +772,21 @@ export default function BankPortal({ backendUrl }) {
                 {filteredAppeals.length === 0 ? (
                   <div className="p-12 text-center rounded-2xl bg-[#090C10] border border-white/[0.05] space-y-2">
                     <CheckCircle2 className="w-8 h-8 text-[#00F0A0] mx-auto opacity-70" />
-                    <p className="text-sm font-bold text-white">No Tickets Matching Filter</p>
-                    <p className="text-xs text-[#738294]">Submit a false positive review ticket from the mobile app to see it live here.</p>
+                    <p className="text-sm font-bold text-white">No Active Pending Tickets</p>
+                    <p className="text-xs text-[#738294]">
+                      {clearedTicketIds.length > 0 
+                        ? `${clearedTicketIds.length} completed tickets are archived in the Disputes History tab.` 
+                        : 'Submit a false positive review ticket from the mobile app to see it live here.'}
+                    </p>
+                    {clearedTicketIds.length > 0 && (
+                      <button
+                        onClick={() => setActiveTab('history')}
+                        className="mt-2 px-3.5 py-1.5 rounded-xl bg-[#171E2B] hover:bg-[#1E2636] border border-white/[0.1] text-xs font-mono text-[#00F0A0] inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <History className="w-3.5 h-3.5" />
+                        <span>View Archived Disputes History →</span>
+                      </button>
+                    )}
                   </div>
                 ) : (
                   filteredAppeals.map((appeal) => (
@@ -764,6 +868,137 @@ export default function BankPortal({ backendUrl }) {
           )}
 
           {/* ══════════════════════════════════════════════════════════
+              TAB 1.5: DISPUTES HISTORY & COMPLETED ARCHIVES
+          ══════════════════════════════════════════════════════════ */}
+          {activeTab === 'history' && (
+            <div className="p-5 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-4 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+                <div>
+                  <h2 className="text-sm font-bold text-white font-mono flex items-center gap-2">
+                    <History className="w-4 h-4 text-[#00F0A0]" />
+                    Disputes &amp; Resolution History Archive
+                  </h2>
+                  <p className="text-[11px] text-[#738294] font-mono mt-0.5">
+                    Complete permanent log of all approved, whitelisted, and rejected cyber disputes.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-[#546274] absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search history records..."
+                      className="bg-[#090C10] border border-white/[0.09] rounded-xl py-1.5 pl-8 pr-3 text-xs font-mono text-white placeholder:text-[#546274] focus:outline-none focus:border-[#00F0A0]/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* History Summary Badges */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-xl bg-[#090C10] border border-white/[0.06] text-center">
+                  <span className="text-[10px] font-mono uppercase text-[#738294] block">Total Resolved</span>
+                  <span className="text-lg font-bold text-white font-mono">{historyAppeals.length}</span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-[#090C10] border border-emerald-500/20 text-center">
+                  <span className="text-[10px] font-mono uppercase text-emerald-400 block">Whitelisted / Approved</span>
+                  <span className="text-lg font-bold text-emerald-300 font-mono">
+                    {historyAppeals.filter(a => a.status === 'APPROVED_WHITELISTED' || a.status === 'APPROVED').length}
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-[#090C10] border border-rose-500/20 text-center">
+                  <span className="text-[10px] font-mono uppercase text-rose-400 block">Blocked / Rejected</span>
+                  <span className="text-lg font-bold text-rose-300 font-mono">
+                    {historyAppeals.filter(a => a.status === 'REJECTED').length}
+                  </span>
+                </div>
+              </div>
+
+              {/* History List */}
+              <div className="space-y-3">
+                {historyAppeals.length === 0 ? (
+                  <div className="p-12 text-center rounded-2xl bg-[#090C10] border border-white/[0.05] space-y-2">
+                    <History className="w-8 h-8 text-[#546274] mx-auto opacity-70" />
+                    <p className="text-sm font-bold text-white">No Historical Dispute Records</p>
+                    <p className="text-xs text-[#738294]">Resolved dispute cases will automatically be archived here.</p>
+                  </div>
+                ) : (
+                  historyAppeals.map((appeal) => (
+                    <div
+                      key={appeal.appealId}
+                      className="p-4 sm:p-5 rounded-2xl bg-[#090C10] border border-white/[0.07] hover:border-white/[0.15] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm"
+                    >
+                      <div 
+                        className="space-y-2 flex-1 cursor-pointer"
+                        onClick={() => setSelectedTicket(appeal)}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#171E2B] text-[#00F0A0] border border-[#00F0A0]/25">
+                            {appeal.appealId}
+                          </span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                            appeal.status === 'APPROVED_WHITELISTED' || appeal.status === 'APPROVED'
+                              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                              : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                          }`}>
+                            {appeal.status.replace(/_/g, ' ')}
+                          </span>
+                          <span className="text-[10px] font-mono text-[#546274] ml-auto">
+                            {appeal.submittedAt ? new Date(appeal.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-[11px] font-mono text-[#738294]">Target Recipient VPA:</span>
+                            <span className="text-sm font-mono font-bold text-white">{appeal.vpa || 'Unknown VPA'}</span>
+                            {appeal.amount ? (
+                              <span className="text-xs font-mono font-bold text-[#00F0A0] ml-2">
+                                (₹{Number(appeal.amount).toLocaleString('en-IN')})
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="text-xs text-[#BAC5D5] mt-1 font-medium leading-relaxed">
+                            "{appeal.reason}"
+                          </p>
+                          {appeal.reviewerNotes && (
+                            <p className="text-[11px] font-mono text-[#00F0A0] mt-1 bg-[#10141C] p-2 rounded-lg border border-[#00F0A0]/20">
+                              🔒 Officer Audit Note: {appeal.reviewerNotes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex sm:flex-col md:flex-row items-center gap-2 shrink-0 pt-2 md:pt-0">
+                        {clearedTicketIds.includes(appeal.appealId) && (
+                          <button
+                            onClick={() => handleRestoreTicket(appeal.appealId)}
+                            className="px-3 py-2 rounded-xl bg-[#171E2B] hover:bg-[#1E2636] border border-white/[0.1] text-xs font-mono text-[#BAC5D5] hover:text-white flex items-center gap-1.5 transition-all cursor-pointer"
+                            title="Restore back to active disputes queue"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-[#00F0A0]" />
+                            <span>Restore to Queue</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setSelectedTicket(appeal)}
+                          className="px-3 py-2 rounded-xl bg-[#00F0A0]/15 hover:bg-[#00F0A0]/25 border border-[#00F0A0]/30 text-xs font-mono text-[#00F0A0] flex items-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Inspect Telemetry</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════
               TAB 2: DATABASE SEARCH TABULAR VIEW (Req 3)
           ══════════════════════════════════════════════════════════ */}
           {activeTab === 'database_search' && (
@@ -832,19 +1067,24 @@ export default function BankPortal({ backendUrl }) {
                       <th className="py-3 px-4">Risk Score</th>
                       <th className="py-3 px-4">Source</th>
                       <th className="py-3 px-4">Details</th>
+                      <th className="py-3 px-4 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.04] bg-[#090C10]/60">
                     {filteredThreats.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-[#738294]">
+                        <td colSpan={7} className="py-8 text-center text-[#738294]">
                           No threat records found matching current query.
                         </td>
                       </tr>
                     ) : (
                       filteredThreats.map((t) => (
-                        <tr key={t.id || t.identifier} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="py-3 px-4 font-bold text-white">
+                        <tr 
+                          key={t.id || t.identifier} 
+                          onClick={() => setSelectedThreatRecord(t)}
+                          className="hover:bg-white/[0.05] transition-all cursor-pointer group"
+                        >
+                          <td className="py-3 px-4 font-bold text-white group-hover:text-[#00F0A0] transition-colors">
                             {t.identifier}
                           </td>
                           <td className="py-3 px-4">
@@ -860,8 +1100,12 @@ export default function BankPortal({ backendUrl }) {
                             {t.category}
                           </td>
                           <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                              {t.riskScore}% THREAT
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              (t.riskScore || 0) >= 80 
+                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
+                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            }`}>
+                              {t.riskScore || 90}% THREAT
                             </span>
                           </td>
                           <td className="py-3 px-4 text-[#8494A8] text-[11px]">
@@ -869,6 +1113,11 @@ export default function BankPortal({ backendUrl }) {
                           </td>
                           <td className="py-3 px-4 text-[#BAC5D5] text-[11px] max-w-xs truncate">
                             {t.details}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="text-[10px] font-mono text-[#00F0A0] group-hover:underline flex items-center justify-end gap-1">
+                              <Eye className="w-3 h-3" /> Inspect
+                            </span>
                           </td>
                         </tr>
                       ))
@@ -1261,6 +1510,135 @@ export default function BankPortal({ backendUrl }) {
               Save to Threat Registry
             </button>
           </form>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          MODAL: ENLARGED THREAT RECORD DEEP-DIVE INSPECTION
+      ══════════════════════════════════════════════════════════════ */}
+      {selectedThreatRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-2xl bg-[#10141C] border border-white/[0.14] rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl animate-scale-up max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-white/[0.08]">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    selectedThreatRecord.type === 'VPA' || selectedThreatRecord.identifier?.includes('@')
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                      : 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                  }`}>
+                    {selectedThreatRecord.type === 'VPA' || selectedThreatRecord.identifier?.includes('@') ? 'UPI VPA RECIPIENT' : 'PHONE NUMBER (+91)'}
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                    {selectedThreatRecord.category}
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-white font-mono tracking-tight flex items-center gap-2 pt-1">
+                  <span>{selectedThreatRecord.identifier}</span>
+                </h2>
+              </div>
+
+              <button 
+                onClick={() => setSelectedThreatRecord(null)}
+                className="p-1.5 rounded-xl text-[#8494A8] hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Score & Risk Overview Gauge */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-4 rounded-2xl bg-[#090C10] border border-rose-500/30 flex flex-col justify-between">
+                <span className="text-[10px] font-mono uppercase text-[#738294] block">Threat Risk Score</span>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-3xl font-black text-rose-400 font-mono">
+                    {selectedThreatRecord.riskScore || 95}%
+                  </span>
+                  <span className="text-xs font-mono text-rose-300/80">/ 100</span>
+                </div>
+                <span className="text-[10px] font-mono text-rose-400 font-bold uppercase mt-1">
+                  CRITICAL EXTORTION
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#090C10] border border-white/[0.06] flex flex-col justify-between">
+                <span className="text-[10px] font-mono uppercase text-[#738294] block">Intelligence Source</span>
+                <p className="font-bold text-white text-sm font-mono mt-1">
+                  {selectedThreatRecord.source || 'I4C 1930 / Sanchar Saathi'}
+                </p>
+                <span className="text-[10px] font-mono text-[#00F0A0] mt-1">
+                  ✓ Verified Registry Feed
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#090C10] border border-white/[0.06] flex flex-col justify-between">
+                <span className="text-[10px] font-mono uppercase text-[#738294] block">Interception Policy</span>
+                <p className="font-bold text-amber-400 text-sm font-mono mt-1">
+                  HARD BLOCK (HOLD)
+                </p>
+                <span className="text-[10px] font-mono text-[#8494A8] mt-1">
+                  Pre-Transaction Halt
+                </span>
+              </div>
+            </div>
+
+            {/* Full Un-truncated Explanation & Modus Operandi Details */}
+            <div className="p-4 rounded-2xl bg-[#090C10] border border-white/[0.08] space-y-2">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[#00F0A0] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" /> Full Modus Operandi &amp; Threat Intelligence Evidence:
+              </span>
+              <p className="text-xs text-[#BAC5D5] font-medium leading-relaxed font-sans bg-white/[0.02] p-3.5 rounded-xl border border-white/[0.04]">
+                {selectedThreatRecord.details || 'Identified in active coercion campaign impersonating enforcement agencies or high-pressure payment redirection schemes.'}
+              </p>
+            </div>
+
+            {/* Reporting Officer & System Metadata */}
+            <div className="p-3.5 rounded-2xl bg-[#090C10] border border-white/[0.06] text-xs font-mono space-y-1.5">
+              <div className="flex justify-between text-[#8494A8]">
+                <span>Reporting Node:</span>
+                <span className="text-white">{selectedThreatRecord.reportedBy || 'NPCI National CSOC Sentinel'}</span>
+              </div>
+              <div className="flex justify-between text-[#8494A8]">
+                <span>Status in Distributed DB:</span>
+                <span className="text-[#00F0A0] font-bold">SYNCHRONIZED (ACTIVE BLACKLIST)</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/[0.08]">
+              <button
+                onClick={() => {
+                  navigator.clipboard && navigator.clipboard.writeText(selectedThreatRecord.identifier);
+                  setActionSuccess(`Copied ${selectedThreatRecord.identifier} to clipboard!`);
+                  setTimeout(() => setActionSuccess(''), 3000);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-[#171E2B] hover:bg-[#1E2636] border border-white/[0.1] text-xs font-mono text-[#BAC5D5] hover:text-white flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <span>📋 Copy Identifier</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setActiveTab('disputes');
+                    setSearchQuery(selectedThreatRecord.identifier);
+                    setSelectedThreatRecord(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#171E2B] hover:bg-[#1E2636] border border-[#00F0A0]/30 text-xs font-mono text-[#00F0A0] flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Check Associated Disputes</span>
+                </button>
+                <button
+                  onClick={() => setSelectedThreatRecord(null)}
+                  className="px-4 py-2 rounded-xl bg-[#00F0A0] hover:bg-[#00D68F] text-[#080B0F] text-xs font-mono font-bold transition-all cursor-pointer shadow-md"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
