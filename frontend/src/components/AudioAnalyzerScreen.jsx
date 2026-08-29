@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Mic, Upload, ShieldAlert, ArrowLeft, RefreshCw, 
   Sparkles, CheckCircle2, AlertOctagon, FileAudio, Play, Square, Shield, PhoneCall,
-  Volume2, Globe, Database, Save
+  Volume2, Globe, Database, Save, Radio
 } from 'lucide-react';
 import { translations } from '../translations';
 
@@ -15,13 +15,20 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
   const [recordingLive, setRecordingLive] = useState(false);
   const [recTimer, setRecTimer] = useState(0);
   const [callerNumberInput, setCallerNumberInput] = useState('');
-  const [selectedAiLang, setSelectedAiLang] = useState(currentLang === 'hi' ? 'hi' : 'en');
+  const [selectedAiLang, setSelectedAiLang] = useState(currentLang || 'en');
   const [uploadStatus, setUploadStatus] = useState('');
+  const [liveSpeechText, setLiveSpeechText] = useState('');
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
   const fileInputRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  // Sync selectedAiLang with currentLang prop if it changes
+  useEffect(() => {
+    if (currentLang) setSelectedAiLang(currentLang);
+  }, [currentLang]);
 
   const presets = {
     digital_arrest: {
@@ -50,15 +57,47 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         try { mediaRecorderRef.current.stop(); } catch (e) {}
       }
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
     };
   }, []);
 
-  // ── 1. Live Microphone Recording via MediaRecorder ──
+  // ── 1. Live Microphone Recording via MediaRecorder + Live SpeechRecognition ──
   const startRealAudioRecording = async () => {
     try {
       setResult(null);
       setUploadStatus('');
+      setLiveSpeechText('');
       audioChunksRef.current = [];
+
+      // Start Browser Speech Recognition in parallel for real-time live captioning
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = selectedAiLang === 'hi' ? 'hi-IN' : (selectedAiLang === 'or' ? 'or-IN' : (selectedAiLang === 'bn' ? 'bn-IN' : (selectedAiLang === 'te' ? 'te-IN' : (selectedAiLang === 'ta' ? 'ta-IN' : 'en-IN'))));
+          
+          recognition.onresult = (event) => {
+            let currentText = '';
+            for (let i = 0; i < event.results.length; i++) {
+              currentText += event.results[i][0].transcript;
+            }
+            if (currentText) {
+              setLiveSpeechText(currentText);
+            }
+          };
+          recognition.onerror = (e) => {
+            console.log('[Live Speech Recognition]:', e.error);
+          };
+          recognition.start();
+          recognitionRef.current = recognition;
+        } catch (e) {
+          console.log('[SpeechRecognition start]:', e);
+        }
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -84,6 +123,7 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
             audioBase64: base64Audio,
             audioFileName: `mic_recording_${Date.now()}.webm`,
             durationSeconds: recTimer,
+            fallbackTranscript: liveSpeechText || null,
             callerNumber: callerNumberInput
           });
         };
@@ -111,6 +151,9 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
   const stopRealAudioRecording = () => {
     setRecordingLive(false);
     if (timerRef.current) clearInterval(timerRef.current);
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+    }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try { mediaRecorderRef.current.stop(); } catch (e) {}
     }
@@ -147,7 +190,7 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           audioBase64,
-          audioFileName: audioFileName || 'voice_sample.m4a',
+          audioFileName: audioFileName || 'voice_sample.webm',
           durationSeconds: durationSeconds || 30,
           fallbackTranscript: fallbackTranscript,
           callerNumber: callerNumber ? callerNumber.trim() : null,
@@ -162,28 +205,27 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
         throw new Error('Analysis response empty');
       }
     } catch (err) {
-      console.warn('[Audio Analyzer Fallback]:', err);
+      console.warn('[Audio Analyzer Error / Fallback]:', err);
       // Fallback display if server is unreachable
       setResult({
         fileMetadata: { 
-          fileName: audioFileName || 'recording.m4a', 
+          fileName: audioFileName || 'recording.webm', 
           durationSeconds: durationSeconds || 30,
           associatedCaller: callerNumber || null,
           savedToThreatRegistry: Boolean(callerNumber)
         },
-        transcribedSnippet: fallbackTranscript || 'Digital arrest legal notice: Aadhaar card implicated in financial fraud. Pay deposit immediately.',
-        phishingDetected: true,
-        confidenceScore: 94,
-        riskLevel: 'CRITICAL',
-        primaryCategory: 'DIGITAL_ARREST',
-        coercionLevel: 'SEVERE',
-        summary: '🚨 CRITICAL EXTORTION DETECTED: Caller is using fraudulent police impersonation and legal intimidation to coerce immediate funds.',
-        safetyAdvice: 'Disconnect call immediately and report to 1930 Cybercrime helpline.',
+        transcribedSnippet: fallbackTranscript || 'No clear speech detected in recorded audio sample.',
+        phishingDetected: fallbackTranscript ? (fallbackTranscript.toLowerCase().includes('police') || fallbackTranscript.toLowerCase().includes('arrest') || fallbackTranscript.toLowerCase().includes('deposit')) : false,
+        confidenceScore: fallbackTranscript ? 88 : 5,
+        riskLevel: fallbackTranscript ? 'HIGH_RISK' : 'SAFE',
+        primaryCategory: fallbackTranscript ? 'GENERAL_SCAM' : 'SAFE_CONVERSATION',
+        coercionLevel: fallbackTranscript ? 'MODERATE' : 'NONE',
+        summary: fallbackTranscript ? 'Potential coercion or urgency pattern detected in spoken conversation.' : 'No cyber fraud or coercion indicators found in this audio sample.',
+        safetyAdvice: 'Never share OTPs, bank passwords, or initiate unverified money transfers.',
         actionPlan: [
-          '1. Immediately block and disconnect the caller number.',
-          '2. Do NOT transfer any money or pay security deposits.',
-          '3. Remember: Real Indian Police/CBI NEVER conduct Digital Arrests over calls.',
-          '4. Report to National Cyber Crime Helpline (1930).'
+          '1. Never transfer money during an active high-pressure phone call.',
+          '2. Always verify caller identities with official helpline 1930.',
+          '3. Real authorities never conduct Digital Arrests over WhatsApp/voice calls.'
         ]
       });
     } finally {
@@ -212,24 +254,24 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
           onClick={onBack}
           className="flex items-center gap-1.5 text-[11px] font-semibold text-white/60 active:scale-90 transition-all"
         >
-          <ArrowLeft className="w-4 h-4 stroke-[2.5]" /> {t.backBtn}
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" /> {t.backBtn || 'Back'}
         </button>
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-[8px] flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#D8F828,#A8CC18)' }}>
             <Shield className="w-[13px] h-[13px] text-[#1A0317] stroke-[2.8]" />
           </div>
-          <span className="font-extrabold text-white text-[14px]" style={{ fontFamily: 'Outfit, sans-serif' }}>Verix Voice AI</span>
+          <span className="font-extrabold text-white text-[14px]" style={{ fontFamily: 'Outfit, sans-serif' }}>{t.verixVoiceAi || 'Verix Voice AI'}</span>
         </div>
         <span className="text-[9px] font-bold px-2.5 py-1 rounded-full font-mono uppercase tracking-wider" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399' }}>
-          DPDP 2023 Compliant
+          {t.dpdpNotice || 'DPDP 2023 Compliant'}
         </span>
       </div>
 
       {/* Page Title & Subtext */}
       <div>
-        <h1 className="text-[20px] font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>{t.aiVoiceScan}</h1>
+        <h1 className="text-[20px] font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>{t.audioTitle || 'Live Voice Phishing Defense'}</h1>
         <p className="text-[11.5px] text-white/45 font-medium leading-snug mt-0.5">
-          Real-time speech-to-intent analysis for digital arrest and coercion detection powered by Groq Whisper & LLaMA 3.3.
+          {t.audioSubtitle || 'Real-time speech-to-intent analysis for digital arrest and coercion detection powered by Groq Whisper & LLaMA 3.3.'}
         </p>
       </div>
 
@@ -237,21 +279,25 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
       <div className="p-3.5 rounded-[20px] space-y-2.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-wider text-white/50 font-mono flex items-center gap-1.5">
-            <PhoneCall className="w-3.5 h-3.5 text-[#D8F828]" /> Target Caller Number (Optional):
+            <PhoneCall className="w-3.5 h-3.5 text-[#D8F828]" /> {t.targetCallerNumber || 'Target Caller Number (Optional):'}
           </span>
           <div className="flex items-center gap-1 bg-black/40 p-1 rounded-lg border border-white/10">
-            <button
-              onClick={() => setSelectedAiLang('en')}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${selectedAiLang === 'en' ? 'bg-[#D8F828] text-black' : 'text-white/50'}`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setSelectedAiLang('hi')}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${selectedAiLang === 'hi' ? 'bg-[#D8F828] text-black' : 'text-white/50'}`}
-            >
-              हिन्दी
-            </button>
+            {[
+              { id: 'en', label: 'EN' },
+              { id: 'hi', label: 'हि' },
+              { id: 'or', label: 'ଓଡ଼ି' },
+              { id: 'bn', label: 'বাং' },
+              { id: 'te', label: 'తె' },
+              { id: 'ta', label: 'தமி' }
+            ].map(l => (
+              <button
+                key={l.id}
+                onClick={() => setSelectedAiLang(l.id)}
+                className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold transition-all ${selectedAiLang === l.id ? 'bg-[#D8F828] text-black' : 'text-white/50'}`}
+              >
+                {l.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -259,7 +305,7 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
           type="text"
           value={callerNumberInput}
           onChange={(e) => setCallerNumberInput(e.target.value)}
-          placeholder="e.g. +91 94775 30475 (Auto-saves to Threat DB if flagged)"
+          placeholder={t.targetCallerPlaceholder || 'e.g. +91 94775 30475 (Auto-saves to Threat DB if flagged)'}
           className="w-full bg-black/40 border border-white/15 rounded-xl px-3.5 py-2.5 text-[12px] text-white font-mono placeholder:text-white/25 focus:outline-none focus:border-[#D8F828]"
         />
       </div>
@@ -279,12 +325,24 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
 
         <div>
           <h3 className="text-[14px] font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
-            {recordingLive ? `🔴 Recording Live Speech (00:${recTimer < 10 ? `0${recTimer}` : recTimer} / 30s)` : 'Live Microphone Sentinel'}
+            {recordingLive ? `🔴 Recording Live Speech (00:${recTimer < 10 ? `0${recTimer}` : recTimer} / 30s)` : (t.liveSpeechSentinel || 'Live Microphone Sentinel')}
           </h3>
           <p className="text-[10.5px] text-white/45 mt-0.5 leading-snug">
-            Tap mic to record audio. Groq Whisper transcribes and destroys raw audio immediately.
+            {t.liveSpeechSentinelSub || 'Tap mic to record audio. Groq Whisper transcribes and destroys raw audio immediately.'}
           </p>
         </div>
+
+        {/* Live Speech Recognition Captions Preview */}
+        {recordingLive && liveSpeechText && (
+          <div className="p-3 rounded-xl bg-black/50 border border-white/10 text-left animate-pulse">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#D8F828] font-mono block mb-1">
+              Live Speech Detected:
+            </span>
+            <p className="text-xs text-white/90 italic font-mono">
+              "{liveSpeechText}"
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button
@@ -295,7 +353,7 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
               : { background: 'linear-gradient(135deg,#E4FF2E,#C4E810)', color: '#1A0317', fontFamily: 'Outfit, sans-serif' }
             }
           >
-            {recordingLive ? <><Square className="w-3.5 h-3.5" /> Stop &amp; Scan</> : <><Mic className="w-3.5 h-3.5 stroke-[2.8]" /> Record Mic</>}
+            {recordingLive ? <><Square className="w-3.5 h-3.5" /> {t.stopAndScan || 'Stop & Scan'}</> : <><Mic className="w-3.5 h-3.5 stroke-[2.8]" /> {t.recordMic || 'Record Mic'}</>}
           </button>
 
           <input
@@ -310,7 +368,7 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
             onClick={() => fileInputRef.current?.click()}
             className="py-3 px-3 rounded-[16px] text-[11.5px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] bg-white/10 text-white border border-white/15 hover:bg-white/15"
           >
-            <Upload className="w-3.5 h-3.5 text-cyan-400" /> Upload Audio
+            <Upload className="w-3.5 h-3.5 text-cyan-400" /> {t.uploadAudioFile ? t.uploadAudioFile.split('(')[0].trim() : 'Upload Audio'}
           </button>
         </div>
       </div>
@@ -318,7 +376,7 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
       {/* Audio Sample Presets */}
       <div className="space-y-2.5">
         <span className="text-[11px] font-bold text-white/50 flex items-center gap-1.5 uppercase tracking-wider font-mono">
-          <Sparkles className="w-3.5 h-3.5 text-[#D8F828]" /> Or Test Real Scam Call Scenarios:
+          <Sparkles className="w-3.5 h-3.5 text-[#D8F828]" /> {t.presetScenarios || 'Preset Voice Phishing Scenarios'}:
         </span>
 
         <div className="space-y-2">
@@ -358,10 +416,10 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
           {/* Top Threat Badge */}
           <div className="flex items-center justify-between">
             <span className="px-2.5 py-1 rounded-full text-[9.5px] font-black uppercase tracking-wider" style={result.phishingDetected ? { background: 'rgba(232,84,107,0.2)', border: '1px solid rgba(232,84,107,0.4)', color: '#F87396' } : { background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#34d399' }}>
-              {result.phishingDetected ? `🚨 ${result.primaryCategory?.replace(/_/g, ' ')}` : '✅ SAFE CALL'}
+              {result.phishingDetected ? (t.scamDetectedTitle || `🚨 ${result.primaryCategory?.replace(/_/g, ' ')}`) : (t.safeAudioTitle || '✅ SAFE CALL')}
             </span>
             <span className={`text-[11px] font-mono font-bold ${result.phishingDetected ? 'text-rose-400' : 'text-emerald-400'}`}>
-              Threat Score: {result.confidenceScore}%
+              {t.suspiciousConfidence || 'Threat Score'}: {result.confidenceScore}%
             </span>
           </div>
 
@@ -378,7 +436,7 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
           {/* Transcribed Snippet */}
           <div className="space-y-1">
             <span className="text-[9px] font-bold uppercase text-white/35 font-mono tracking-wider">
-              Whisper Speech-to-Text Transcription:
+              {t.transcribedSpeech || 'Whisper Speech-to-Text Transcription'}:
             </span>
             <p className="text-[11px] text-white/75 italic font-mono p-3 rounded-[14px]" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
               "{result.transcribedSnippet}"
@@ -387,13 +445,13 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
 
           {/* Instant AI Summary */}
           <div className="p-3 rounded-[14px] space-y-1" style={result.phishingDetected ? { background: 'rgba(232,84,107,0.12)', border: '1px solid rgba(232,84,107,0.25)' } : { background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
-            <p className={`text-[10px] font-bold uppercase tracking-wider ${result.phishingDetected ? 'text-rose-300' : 'text-emerald-300'}`}>AI Threat Intent Summary:</p>
+            <p className={`text-[10px] font-bold uppercase tracking-wider ${result.phishingDetected ? 'text-rose-300' : 'text-emerald-300'}`}>{t.aiVerdictSummary || 'AI Threat Intent Summary'}:</p>
             <p className={`text-[11.5px] leading-snug ${result.phishingDetected ? 'text-rose-200' : 'text-emerald-200'}`}>{result.summary}</p>
           </div>
 
           {/* Action Plan Guidance */}
           <div className="space-y-1.5 pt-1">
-            <p className="text-[9.5px] font-bold uppercase tracking-wider text-white/35 font-mono">Verix Protective Advisory:</p>
+            <p className="text-[9.5px] font-bold uppercase tracking-wider text-white/35 font-mono">{t.immediateActionPlan || 'Recommended Actions'}:</p>
             {result.actionPlan?.map((step, idx) => (
               <div key={idx} className="flex items-start gap-1.5 text-[11px] text-white/70 font-medium">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 stroke-[2.5]" />

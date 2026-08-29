@@ -29,9 +29,11 @@ export default function PaymentProtectionScreen({ user, onNavigate, currentLang 
           </div>
           <div>
             <span className="font-extrabold text-white text-[17px] tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>
-              Pay Shield
+              {t.navPayments || 'Pay Shield'}
             </span>
-            <span className="block text-[10px] text-white/40 font-medium">Live Payment Defense</span>
+            <span className="block text-[10px] text-white/40 font-medium">
+              {t.cyberDefenseAi || 'Live Payment Defense'}
+            </span>
           </div>
         </div>
         <div
@@ -47,10 +49,10 @@ export default function PaymentProtectionScreen({ user, onNavigate, currentLang 
         <div className="rounded-[24px] p-4 flex items-center justify-between" style={glassDark}>
           <div>
             <h2 className="text-[14px] font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
-              Live Payment Protection
+              {t.livePaymentProtection || 'Live Payment Protection'}
             </h2>
             <p className="text-[11px] text-white/45 mt-0.5 leading-snug">
-              Real-time heuristic analysis against NPCI &amp; I4C scam registries.
+              {t.livePaymentProtectionSub || 'Real-time heuristic analysis against NPCI & I4C scam registries.'}
             </p>
           </div>
           <button
@@ -88,8 +90,12 @@ export default function PaymentProtectionScreen({ user, onNavigate, currentLang 
               <Search className="w-5 h-5 text-[#D8F828] stroke-[2]" />
             </div>
             <div>
-              <h4 className="text-[12.5px] font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>Manual VPA Check</h4>
-              <p className="text-[10px] text-white/50 mt-0.5">Verify any UPI ID or phone</p>
+              <h4 className="text-[12.5px] font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                {t.manualVpaCheck || 'Manual VPA Check'}
+              </h4>
+              <p className="text-[10px] text-white/50 mt-0.5">
+                {t.manualVpaCheckSub || 'Verify any UPI ID or phone'}
+              </p>
             </div>
           </button>
 
@@ -108,8 +114,12 @@ export default function PaymentProtectionScreen({ user, onNavigate, currentLang 
               <QrCode className="w-5 h-5 text-emerald-400 stroke-[2]" />
             </div>
             <div>
-              <h4 className="text-[12.5px] font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>Scan QR Code</h4>
-              <p className="text-[10px] text-white/50 mt-0.5">Verify merchant payload</p>
+              <h4 className="text-[12.5px] font-bold text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                {t.scanQrCode || 'Scan QR Code'}
+              </h4>
+              <p className="text-[10px] text-white/50 mt-0.5">
+                {t.scanQrCodeSub || 'Verify merchant payload'}
+              </p>
             </div>
           </button>
         </div>
@@ -125,17 +135,19 @@ export default function PaymentProtectionScreen({ user, onNavigate, currentLang 
         >
           <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(216,248,40,0.1) 0%, transparent 70%)' }} />
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-bold text-[#D8F828] font-mono uppercase tracking-wider">Security Engine Status</span>
+            <span className="text-[10px] font-bold text-[#D8F828] font-mono uppercase tracking-wider">
+              {t.securityEngineStatus || 'Security Engine Status'}
+            </span>
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse block" />
-              <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Active</span>
+              <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">{t.active || 'Active'}</span>
             </div>
           </div>
           <h3 className="text-[16px] font-bold text-white mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
-            Guarding All UPI Transfers
+            {t.guardingUpiTransfers || 'Guarding All UPI Transfers'}
           </h3>
           <p className="text-[11px] text-white/55 leading-relaxed">
-            Verix monitors clipboard, active calls, and payee threat scores before any money leaves your account.
+            {t.guardingUpiTransfersDesc || 'Verix monitors clipboard, active calls, and payee threat scores before any money leaves your account.'}
           </p>
         </div>
 
@@ -143,12 +155,26 @@ export default function PaymentProtectionScreen({ user, onNavigate, currentLang 
         <div className="rounded-[24px] p-4" style={glassDark}>
           <h4 className="text-[11px] font-bold text-white/60 uppercase tracking-wider font-mono mb-3 flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5" />
-            Active Protection Layers
+            {t.monitorsTitle || 'Active Protection Layers'}
           </h4>
           <div className="space-y-2.5">
             {[
-              { icon: ShieldCheck, label: 'National Registry Screening', desc: 'Instant cross-referencing with I4C blacklisted VPAs and suspect accounts.', color: 'rgba(16,185,129,0.2)', iconColor: 'text-emerald-400', border: 'rgba(16,185,129,0.25)' },
-              { icon: Lock, label: 'Coercion & Active Call Intercept', desc: 'Automatically warns and halts transfers if an ongoing scammer call is active.', color: 'rgba(216,248,40,0.1)', iconColor: 'text-[#D8F828]', border: 'rgba(216,248,40,0.2)' },
+              { 
+                icon: ShieldCheck, 
+                label: t.upiMonitor || 'National Registry Screening', 
+                desc: t.upiMonitorSub || 'Instant cross-referencing with I4C blacklisted VPAs and suspect accounts.', 
+                color: 'rgba(16,185,129,0.2)', 
+                iconColor: 'text-emerald-400', 
+                border: 'rgba(16,185,129,0.25)' 
+              },
+              { 
+                icon: Lock, 
+                label: t.voiceMonitor || 'Coercion & Active Call Intercept', 
+                desc: t.voiceMonitorSub || 'Automatically warns and halts transfers if an ongoing scammer call is active.', 
+                color: 'rgba(216,248,40,0.1)', 
+                iconColor: 'text-[#D8F828]', 
+                border: 'rgba(216,248,40,0.2)' 
+              },
             ].map(({ icon: Icon, label, desc, color, iconColor, border }) => (
               <div key={label} className="flex items-start gap-3 p-3 rounded-[16px]" style={{ background: color, border: `1px solid ${border}` }}>
                 <div className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(255,255,255,0.08)' }}>

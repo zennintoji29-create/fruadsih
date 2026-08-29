@@ -61,7 +61,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
               </span>
             </div>
             <span className="text-[10.5px] text-white/45 font-medium leading-none block mt-0.5">
-              Cyber Defense AI
+              {t.cyberDefenseAi || 'Cyber Defense AI'}
             </span>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
               style={{ background: 'rgba(216,248,40,0.12)', border: '1px solid rgba(216,248,40,0.3)', color: '#D8F828' }}
             >
               <Zap className="w-3 h-3 text-[#D8F828]" />
-              INSTANT THREAT INTERCEPTOR
+              {t.instantThreatInterceptor || 'INSTANT THREAT INTERCEPTOR'}
             </span>
             <span className="w-2.5 h-2.5 rounded-full bg-[#D8F828] shadow-[0_0_10px_#D8F828] animate-pulse block" />
           </div>
@@ -148,11 +148,9 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
               {t.runPreCheck || 'Run Pre-Payment Threat Check'}
             </h2>
             <p className="text-[11.5px] text-white/55 mt-1 leading-normal">
-              Active defense against QR tampering, digital arrest coercion, and NPCI scam blacklists.
+              {t.runPreCheckDesc || 'Active defense against QR tampering, digital arrest coercion, and NPCI scam blacklists.'}
             </p>
           </div>
-
-
 
           {/* PROMINENT LIME CTA BUTTON (FIXED HEIGHT & SOLID CLICK TARGET) */}
           <button
@@ -167,7 +165,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
             }}
           >
             <Search className="w-4.5 h-4.5 text-[#1A0317] stroke-[3]" />
-            <span>RUN PRE-PAYMENT THREAT CHECK</span>
+            <span>{t.runEvaluation || 'RUN PRE-PAYMENT THREAT CHECK'}</span>
           </button>
         </div>
 
@@ -195,7 +193,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
                 className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-mono"
                 style={{ background: 'rgba(16,185,129,0.2)', color: '#34d399' }}
               >
-                Instant Scan
+                {t.instantScan || 'Instant Scan'}
               </span>
             </div>
 
@@ -204,7 +202,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
                 {t.scanQr || 'Scan UPI QR'}
               </h4>
               <p className="text-[10px] text-white/50 mt-1 leading-snug">
-                Verify merchant QR payload against national fraud registries.
+                {t.scanQrDesc || 'Verify merchant QR payload against national fraud registries.'}
               </p>
             </div>
 
@@ -236,7 +234,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
                 className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-mono"
                 style={{ background: 'rgba(232,84,107,0.2)', color: '#F87396' }}
               >
-                Coercion AI
+                {t.coercionAi || 'Coercion AI'}
               </span>
             </div>
 
@@ -245,7 +243,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
                 {t.audioScan || 'AI Audio Scan'}
               </h4>
               <p className="text-[10px] text-white/50 mt-1 leading-snug">
-                Real-time speech analyzer for fake police &amp; digital arrest calls.
+                {t.audioScanDesc || 'Real-time speech analyzer for fake police & digital arrest calls.'}
               </p>
             </div>
 
@@ -272,11 +270,11 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
                 <PhoneCall className="w-4 h-4 text-rose-400" />
               </div>
               <h4 className="text-[11.5px] font-bold text-white leading-tight">
-                Call HUD
+                {t.callHudTitle || 'Call HUD'}
               </h4>
             </div>
             <p className="text-[9.5px] text-white/45 mb-2 leading-snug">
-              Simulate Digital Arrest scam call
+              {t.callHudDesc || 'Simulate Digital Arrest scam call'}
             </p>
             <button
               onClick={() => onTriggerCallSimulation && onTriggerCallSimulation('+919477530475')}
@@ -286,11 +284,11 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
                 boxShadow: '0 4px 12px rgba(232,84,107,0.35)',
               }}
             >
-              Test Call Alert
+              {t.testCallAlert || 'Test Call Alert'}
             </button>
           </div>
 
-          {/* SIM Swap Anomaly Simulator (Req 7) */}
+          {/* SIM Swap Anomaly Simulator */}
           <div 
             className="rounded-[22px] p-3.5 flex flex-col justify-between"
             style={glassDark}
@@ -303,11 +301,11 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
                 <Radio className="w-4 h-4 text-amber-400" />
               </div>
               <h4 className="text-[11.5px] font-bold text-white leading-tight">
-                SIM Swap
+                {t.simSwapTitle || 'SIM Swap'}
               </h4>
             </div>
             <p className="text-[9.5px] text-white/45 mb-2 leading-snug">
-              Simulate IMSI carrier change
+              {t.simSwapDesc || 'Simulate IMSI carrier change'}
             </p>
             <button
               onClick={() => {
@@ -315,11 +313,10 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
               }}
               className="w-full py-2 rounded-[12px] text-[10.5px] font-bold text-black active:scale-95 transition-all shadow-md bg-amber-400 hover:bg-amber-300"
             >
-              Test SIM Swap
+              {t.testSimSwap || 'Test SIM Swap'}
             </button>
           </div>
         </div>
-
 
         {/* ── 5. SYSTEM STATUS CARD ── */}
         <div 
@@ -331,14 +328,14 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[9px] font-bold font-mono uppercase tracking-wider text-emerald-400">
-                  SYSTEM STATUS
+                  {t.systemStatusTitle || 'SYSTEM STATUS'}
                 </span>
               </div>
               <h5 className="text-[12px] font-bold text-white mt-0.5">
-                All Systems Operational
+                {t.allSystemsOperational || 'All Systems Operational'}
               </h5>
               <p className="text-[9.5px] text-white/40 font-mono mt-0.5">
-                AI Models • UPI Registry • Audio Engine
+                {t.aiModelsUpiAudio || 'AI Models • UPI Registry • Audio Engine'}
               </p>
             </div>
           </div>
@@ -348,7 +345,7 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
               0
             </span>
             <span className="text-[9px] uppercase tracking-wider text-white/40 font-mono block mt-0.5">
-              Active Threats
+              {t.activeThreats || 'Active Threats'}
             </span>
           </div>
         </div>

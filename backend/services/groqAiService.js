@@ -4,7 +4,15 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from both local and root directories
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(process.cwd(), 'backend/.env') });
 
 const apiKey = process.env.GROQ_API_KEY;
 let groqClient = null;
@@ -29,33 +37,76 @@ export async function transcribeAudioWithGroq(audioBase64OrBuffer, options = {})
   let tempFilePath = null;
   try {
     let buffer;
+    let ext = 'webm';
+
     if (typeof audioBase64OrBuffer === 'string') {
-      const cleanBase64 = audioBase64OrBuffer.replace(/^data:audio\/\w+;base64,/, '');
-      buffer = Buffer.from(cleanBase64, 'base64');
+      // 1. Detect audio format from MIME type or filename
+      if (audioBase64OrBuffer.includes('audio/wav') || audioBase64OrBuffer.includes('audio/x-wav')) {
+        ext = 'wav';
+      } else if (audioBase64OrBuffer.includes('audio/mp3') || audioBase64OrBuffer.includes('audio/mpeg')) {
+        ext = 'mp3';
+      } else if (audioBase64OrBuffer.includes('audio/mp4') || audioBase64OrBuffer.includes('audio/m4a')) {
+        ext = 'm4a';
+      } else if (audioBase64OrBuffer.includes('audio/ogg')) {
+        ext = 'ogg';
+      } else if (audioBase64OrBuffer.includes('audio/webm') || audioBase64OrBuffer.includes('video/webm')) {
+        ext = 'webm';
+      } else if (options.fileName && options.fileName.includes('.')) {
+        ext = options.fileName.split('.').pop().toLowerCase();
+      }
+
+      // 2. Cleanly extract base64 data regardless of codec parameters
+      let cleanBase64 = audioBase64OrBuffer;
+      if (cleanBase64.includes(';base64,')) {
+        cleanBase64 = cleanBase64.split(';base64,')[1];
+      } else if (cleanBase64.startsWith('data:')) {
+        cleanBase64 = cleanBase64.replace(/^data:[^,]+,/, '');
+      }
+
+      buffer = Buffer.from(cleanBase64.trim(), 'base64');
     } else if (Buffer.isBuffer(audioBase64OrBuffer)) {
       buffer = audioBase64OrBuffer;
+      if (options.fileName && options.fileName.includes('.')) {
+        ext = options.fileName.split('.').pop().toLowerCase();
+      }
     } else {
       return null;
     }
 
-    // Write transiently to tmp file for Groq SDK multipart stream
-    const tempFileName = `verix_audio_${Date.now()}_${Math.random().toString(36).substring(7)}.m4a`;
+    if (!buffer || buffer.length === 0) {
+      console.warn('[Groq AI Whisper] Empty audio buffer received.');
+      return null;
+    }
+
+    // Write transiently to tmp file with correct extension for Groq SDK multipart stream
+    const tempFileName = `verix_audio_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
     tempFilePath = path.join(os.tmpdir(), tempFileName);
     fs.writeFileSync(tempFilePath, buffer);
 
-    const language = options.language === 'hi' ? 'hi' : undefined;
+    const targetLang = (options.language && options.language !== 'en') ? options.language : undefined;
+    const whisperModels = ['whisper-large-v3-turbo', 'whisper-large-v3'];
 
-    const transcription = await groqClient.audio.transcriptions.create({
-      file: fs.createReadStream(tempFilePath),
-      model: 'whisper-large-v3-turbo',
-      prompt: 'Cyber crime, Digital Arrest, Mumbai Police, CBI officer, verification deposit, Aadhaar card, FIR, bank account, OTP, Electricity bill.',
-      response_format: 'json',
-      language: language,
-      temperature: 0.0
-    });
+    for (const model of whisperModels) {
+      try {
+        const transcription = await groqClient.audio.transcriptions.create({
+          file: fs.createReadStream(tempFilePath),
+          model: model,
+          prompt: 'Cyber crime, Digital Arrest, Mumbai Police, CBI officer, verification deposit, Aadhaar card, FIR, bank account, OTP, Electricity bill.',
+          response_format: 'json',
+          language: targetLang,
+          temperature: 0.0
+        });
 
-    console.log('[Groq AI Whisper] Real audio transcribed successfully:', transcription?.text?.slice(0, 80));
-    return transcription?.text || null;
+        if (transcription && transcription.text && transcription.text.trim().length > 0) {
+          console.log(`[Groq AI Whisper] (${model}) Transcribed audio successfully:`, transcription.text);
+          return transcription.text.trim();
+        }
+      } catch (modelErr) {
+        console.warn(`[Groq AI Whisper] Model '${model}' attempt failed:`, modelErr.message);
+      }
+    }
+
+    return null;
   } catch (err) {
     console.warn('[Groq AI Whisper] Transcription failed, fallback will be used:', err.message);
     return null;

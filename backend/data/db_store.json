@@ -8,7 +8,7 @@
       "isVerified": true,
       "riskProfileScore": 15,
       "settings": {
-        "maxAmountLimit": 10000,
+        "maxAmountLimit": 15000,
         "voicePhishingMode": true,
         "callScreeningEnabled": true,
         "highRiskAutoHold": true,
@@ -75,6 +75,70 @@
           "deviceId": "device-samsung-s23-01",
           "model": "Samsung Galaxy S23",
           "lastSeen": "2026-08-22T22:05:28.107Z"
+        }
+      ]
+    },
+    "user_google_g-oauth-subhashree-99": {
+      "id": "user_google_g-oauth-subhashree-99",
+      "phone": null,
+      "name": "Subhashree Dash",
+      "email": "subhashree.dash@gmail.com",
+      "photoUrl": null,
+      "googleId": "g-oauth-subhashree-99",
+      "authProvider": "GOOGLE_OAUTH",
+      "isVerified": true,
+      "riskProfileScore": 10,
+      "settings": {
+        "maxAmountLimit": 10000,
+        "voicePhishingMode": true,
+        "callScreeningEnabled": true,
+        "highRiskAutoHold": true,
+        "language": "en"
+      },
+      "trustedPayees": [
+        {
+          "vpa": "landlord.rent@okaxis",
+          "name": "Landlord Rent",
+          "addedOn": "2026-01-10"
+        }
+      ],
+      "knownDevices": [
+        {
+          "deviceId": "dev-google-1788045186489",
+          "model": "Google Auth Client",
+          "lastSeen": "2026-08-29T23:13:06.489Z"
+        }
+      ]
+    },
+    "subhashree.dash@gmail.com": {
+      "id": "user_google_g-oauth-subhashree-99",
+      "phone": null,
+      "name": "Subhashree Dash",
+      "email": "subhashree.dash@gmail.com",
+      "photoUrl": null,
+      "googleId": "g-oauth-subhashree-99",
+      "authProvider": "GOOGLE_OAUTH",
+      "isVerified": true,
+      "riskProfileScore": 10,
+      "settings": {
+        "maxAmountLimit": 10000,
+        "voicePhishingMode": true,
+        "callScreeningEnabled": true,
+        "highRiskAutoHold": true,
+        "language": "en"
+      },
+      "trustedPayees": [
+        {
+          "vpa": "landlord.rent@okaxis",
+          "name": "Landlord Rent",
+          "addedOn": "2026-01-10"
+        }
+      ],
+      "knownDevices": [
+        {
+          "deviceId": "dev-google-1788045186489",
+          "model": "Google Auth Client",
+          "lastSeen": "2026-08-29T23:13:06.489Z"
         }
       ]
     }
@@ -158,11 +222,11 @@
       "identifier": "+919876543210",
       "name": "Scam Caller - Fake CBI Dept",
       "category": "FAKE_POLICE_CBI",
-      "riskScore": 99,
+      "riskScore": 100,
       "isBlacklisted": true,
       "source": "I4C_1930_HELPLINE",
-      "reportCount": 310,
-      "details": "Robocall/Live caller claiming Supreme Court arrest warrant for money laundering.",
+      "reportCount": 311,
+      "details": "Robocall/Live caller claiming Supreme Court arrest warrant for money laundering. | Update: Flagged via Voice AI Analysis (CRITICAL). Threat summary: \"The caller pretends to be a CBI officer and threatens arrest unless a security deposit is paid via UPI, which is a classic phishing and coercion tactic. This is a fraudulent attempt to obtain money under false legal pretenses.\"",
       "tags": [
         "cbi_scam",
         "virtual_arrest",
@@ -433,9 +497,186 @@
         "screenSharingActive": false
       },
       "timestamp": "2026-08-24T12:33:25.368Z"
+    },
+    "risk-eval-b371ea41-4011-4347-85e7-822d3ac2e428": {
+      "assessmentId": "risk-eval-b371ea41-4011-4347-85e7-822d3ac2e428",
+      "vpa": "scammer.cybercell@oksbi",
+      "amount": 25000,
+      "riskScore": 100,
+      "riskLevel": "CRITICAL_BLOCKED",
+      "recommendedAction": "RESTRICT_BLOCK",
+      "isBlocked": true,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 98,
+        "coercionRisk": 95,
+        "deviceRisk": 0,
+        "amountRisk": 65
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (100/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "COERCIVE_MESSAGE_PATTERN",
+            "title": "Extortion / Impersonation In Message",
+            "description": "Payment message contains high-risk police impersonation / extortion indicators: \"fine, clearance\""
+          },
+          {
+            "severity": "CRITICAL",
+            "code": "KNOWN_SCAMMER_MATCH",
+            "title": "Known Scammer Record Found",
+            "description": "This recipient (scammer.cybercell@oksbi) has been reported 142 times in national cybercrime databases."
+          },
+          {
+            "severity": "HIGH",
+            "code": "ACTIVE_COERCION_CALL",
+            "title": "Active Call / Social Engineering Coercion",
+            "description": "You are on an active call during this payment. Scammers frequently keep victims on call to prevent independent verification."
+          },
+          {
+            "severity": "MEDIUM",
+            "code": "USER_THRESHOLD_EXCEEDED",
+            "title": "Safety Limit Exceeded",
+            "description": "Amount (₹25000) exceeds your configured safety threshold of ₹15000."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": false,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": {
+        "id": "threat-vpa-001",
+        "type": "VPA",
+        "identifier": "scammer.cybercell@oksbi",
+        "name": "Fake Cyber Police Verification",
+        "category": "DIGITAL_ARREST",
+        "riskScore": 98,
+        "isBlacklisted": true,
+        "source": "I4C_NATIONAL_CYBER_CRIME_PORTAL",
+        "reportCount": 142,
+        "details": "Impersonates Delhi Police / CBI requesting urgent security clearance fee.",
+        "tags": [
+          "digital_arrest",
+          "fake_police",
+          "cbi_impersonation"
+        ],
+        "reportedAt": "2026-08-10T10:30:00.000Z"
+      },
+      "deviceContext": {
+        "isOnActiveCall": true,
+        "activeCallerNumber": "+919876543210",
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-29T23:13:16.606Z"
+    },
+    "risk-eval-a23083c6-17e4-4142-8a5b-7233b11f81b2": {
+      "assessmentId": "risk-eval-a23083c6-17e4-4142-8a5b-7233b11f81b2",
+      "vpa": "scammer.cybercell@oksbi",
+      "amount": 25000,
+      "riskScore": 100,
+      "riskLevel": "CRITICAL_BLOCKED",
+      "recommendedAction": "RESTRICT_BLOCK",
+      "isBlocked": true,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 98,
+        "coercionRisk": 95,
+        "deviceRisk": 0,
+        "amountRisk": 65
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (100/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "COERCIVE_MESSAGE_PATTERN",
+            "title": "Extortion / Impersonation In Message",
+            "description": "Payment message contains high-risk police impersonation / extortion indicators: \"arrest, bail\""
+          },
+          {
+            "severity": "CRITICAL",
+            "code": "KNOWN_SCAMMER_MATCH",
+            "title": "Known Scammer Record Found",
+            "description": "This recipient (scammer.cybercell@oksbi) has been reported 142 times in national cybercrime databases."
+          },
+          {
+            "severity": "HIGH",
+            "code": "ACTIVE_COERCION_CALL",
+            "title": "Active Call / Social Engineering Coercion",
+            "description": "You are on an active call during this payment. Scammers frequently keep victims on call to prevent independent verification."
+          },
+          {
+            "severity": "MEDIUM",
+            "code": "USER_THRESHOLD_EXCEEDED",
+            "title": "Safety Limit Exceeded",
+            "description": "Amount (₹25000) exceeds your configured safety threshold of ₹15000."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": false,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": {
+        "id": "threat-vpa-001",
+        "type": "VPA",
+        "identifier": "scammer.cybercell@oksbi",
+        "name": "Fake Cyber Police Verification",
+        "category": "DIGITAL_ARREST",
+        "riskScore": 98,
+        "isBlacklisted": true,
+        "source": "I4C_NATIONAL_CYBER_CRIME_PORTAL",
+        "reportCount": 142,
+        "details": "Impersonates Delhi Police / CBI requesting urgent security clearance fee.",
+        "tags": [
+          "digital_arrest",
+          "fake_police",
+          "cbi_impersonation"
+        ],
+        "reportedAt": "2026-08-10T10:30:00.000Z"
+      },
+      "deviceContext": {
+        "isOnActiveCall": true,
+        "activeCallerNumber": "+919876543210",
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-29T23:13:20.425Z"
     }
   },
-  "callReports": {},
+  "callReports": {
+    "call-analysis-fb3f926d-6a9e-4afc-bd7a-173119c44ae7": {
+      "reportId": "call-analysis-fb3f926d-6a9e-4afc-bd7a-173119c44ae7",
+      "callerNumber": "+919876543210",
+      "transcriptSnippet": "This is Mumbai Cyber Cell. A digital arrest warrant has been issued in your name for money laundering. You must isolate yourself in a room and immediately transfer ₹25000 security deposit via UPI to verify your bank account or police will arrive in 1 hour.",
+      "aiEngine": "Groq LLaMA 3.3 70B (Ultra-Fast LLM)",
+      "phishingDetected": true,
+      "confidenceScore": 96,
+      "riskLevel": "CRITICAL",
+      "primaryCategory": "DIGITAL_ARREST",
+      "coercionLevel": "SEVERE",
+      "detectedVectors": [
+        "impersonation",
+        "UPI_payment_request"
+      ],
+      "summary": "The caller pretends to be from Mumbai Cyber Cell and threatens a 'digital arrest' unless a ₹25,000 UPI payment is made. This is a classic voice phishing scam using police impersonation and financial coercion.",
+      "safetyAdvice": "Do not send any money; verify the claim by contacting the official police through a trusted number.",
+      "audioMetrics": {
+        "speechRateElevated": true,
+        "voiceStressDetected": true,
+        "callerDominanceRatio": 0.9
+      },
+      "timestamp": "2026-08-29T23:13:10.247Z",
+      "recordedAt": "2026-08-29T23:13:10.248Z"
+    }
+  },
   "falsePositiveAppeals": {
     "VRX-REV-1787574805377": {
       "appealId": "VRX-REV-1787574805377",
@@ -454,5 +695,5 @@
       "resolvedBy": "BANK_OFFICER_042"
     }
   },
-  "lastSaved": "2026-08-24T12:33:25.391Z"
+  "lastSaved": "2026-08-29T23:13:20.425Z"
 }

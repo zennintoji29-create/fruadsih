@@ -413,6 +413,7 @@ export default function App() {
           {showCallSimulation && (
             <CallScreeningOverlay 
               callerNumber={activeCallerNumber}
+              backendUrl={BACKEND_URL}
               onClose={() => setShowCallSimulation(false)}
             />
           )}
@@ -495,6 +496,7 @@ export default function App() {
               {showCallSimulation && (
                 <CallScreeningOverlay 
                   callerNumber={activeCallerNumber}
+                  backendUrl={BACKEND_URL}
                   onClose={() => setShowCallSimulation(false)}
                 />
               )}

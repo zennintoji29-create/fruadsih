@@ -46,24 +46,46 @@ export class VoicePhishController {
       }
 
       // 1. Real Speech-To-Text Transcription via Groq Whisper Large v3
-      let transcriptionText = fallbackTranscript;
+      let transcriptionText = fallbackTranscript ? fallbackTranscript.trim() : null;
+      let usedRealWhisper = false;
+
       if (audioBase64) {
-        const whisperResult = await transcribeAudioWithGroq(audioBase64, { language: language || 'en' });
-        if (whisperResult) {
-          transcriptionText = whisperResult;
+        const whisperResult = await transcribeAudioWithGroq(audioBase64, { 
+          language: language || 'en',
+          fileName: audioFileName || 'recording.webm'
+        });
+        if (whisperResult && whisperResult.trim().length > 0) {
+          transcriptionText = whisperResult.trim();
+          usedRealWhisper = true;
         }
       }
 
-      // Fallback only if both Whisper and fallbackTranscript were empty
-      if (!transcriptionText) {
-        transcriptionText = 'Hello sir, this is Cyber Crime Department calling regarding verification deposit for active legal warrant.';
+      // If neither audio transcription nor fallback text was provided / speech was unintelligible
+      const isUnintelligible = !transcriptionText || transcriptionText.length < 3;
+      if (isUnintelligible) {
+        transcriptionText = 'No clear speech or scam keywords detected in the recorded audio sample.';
       }
 
       const duration = Number(durationSeconds) || 30;
-      const analysis = await VoicePhishingService.analyzeTranscript(transcriptionText, {
-        callerNumber: callerNumber || 'SUSPECTED_VOICE_CALL',
-        callDurationSeconds: duration
-      });
+      let analysis;
+
+      if (isUnintelligible) {
+        analysis = {
+          phishingDetected: false,
+          confidenceScore: 5,
+          riskLevel: 'SAFE',
+          primaryCategory: 'SAFE_CONVERSATION',
+          coercionLevel: 'NONE',
+          detectedVectors: [],
+          summary: 'No fraudulent extortion, legal threats, or digital arrest patterns detected in this audio sample.',
+          safetyAdvice: 'Always avoid sharing OTPs, bank passwords, or remote screen-sharing codes.'
+        };
+      } else {
+        analysis = await VoicePhishingService.analyzeTranscript(transcriptionText, {
+          callerNumber: callerNumber || 'SUSPECTED_VOICE_CALL',
+          callDurationSeconds: duration
+        });
+      }
 
       // 2. Auto-save flagged caller number to Threat Database if provided
       let savedToDb = false;

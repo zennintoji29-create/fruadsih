@@ -305,7 +305,7 @@ export default function BankPortal({ backendUrl }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           audioBase64: base64Data,
-          audioFileName: fileName || 'voice_sample.m4a',
+          audioFileName: fileName || 'mic_sample.webm',
           callerNumber: audioPhoneInput ? audioPhoneInput.trim() : null,
           durationSeconds: 30
         })

@@ -162,16 +162,16 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
         if (riskRes && riskRes.ok) {
           const riskData = await riskRes.json();
           if (riskData.transactions && Array.isArray(riskData.transactions) && riskData.transactions.length > 0) {
-            const formattedRisk = riskData.transactions.map(t => ({
-              id: t.assessmentId || `tx-${Date.now()}`,
-              vpa: t.vpa,
-              payee: t.vpa.split('@')[0] || 'UPI Payee',
-              amount: `₹${(t.amount || 0).toLocaleString('en-IN')}`,
-              riskScore: t.riskScore || 0,
-              riskLevel: t.riskLevel || (t.riskScore >= 70 ? 'HIGH_RISK' : 'SAFE'),
-              timestamp: t.timestamp ? new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
-              note: t.note || 'UPI Pre-Payment Scan',
-              reason: t.isBlocked ? 'Blocked by Verix Pre-Payment Circuit Breaker' : 'Verified clean recipient handle.'
+            const formattedRisk = riskData.transactions.map(item => ({
+              id: item.assessmentId || `tx-${Date.now()}`,
+              vpa: item.vpa,
+              payee: item.vpa.split('@')[0] || 'UPI Payee',
+              amount: `₹${(item.amount || 0).toLocaleString('en-IN')}`,
+              riskScore: item.riskScore || 0,
+              riskLevel: item.riskLevel || (item.riskScore >= 70 ? 'HIGH_RISK' : 'SAFE'),
+              timestamp: item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+              note: item.note || 'UPI Pre-Payment Scan',
+              reason: item.isBlocked ? 'Blocked by Verix Pre-Payment Circuit Breaker' : 'Verified clean recipient handle.'
             }));
             setPreCheckHistory(prev => {
               const combined = [...formattedRisk, ...prev.filter(p => !formattedRisk.some(f => f.vpa === p.vpa && f.id === p.id))];
@@ -260,7 +260,9 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
           <div className="w-7 h-7 rounded-[10px] flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#D8F828,#A8CC18)' }}>
             <Shield className="w-[14px] h-[14px] text-[#1A0317] stroke-[2.8]" />
           </div>
-          <span className="font-extrabold text-white text-[15px]" style={{ fontFamily: 'Outfit, sans-serif' }}>Security History</span>
+          <span className="font-extrabold text-white text-[15px]" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            {t.historyTitle || 'Security History'}
+          </span>
         </div>
         <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-[#1A0317]" style={{ background: 'linear-gradient(135deg,#D8F828,#A8CC18)' }}>
           {user?.name ? user.name[0].toUpperCase() : 'U'}
@@ -270,10 +272,10 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
       {/* Page Title & Subtext */}
       <div>
         <h1 className="text-[20px] font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
-          Activity &amp; Incident Logs
+          {t.historyTitle || 'Activity & Incident Logs'}
         </h1>
         <p className="text-[11.5px] text-white/45 font-medium leading-relaxed mt-0.5">
-          Review all your UPI threat checks, screened call logs, and bank admin ticket reviews.
+          {t.historySub || 'Review all your UPI threat checks, screened call logs, and bank admin ticket reviews.'}
         </p>
       </div>
 
@@ -285,7 +287,7 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by VPA, phone number, or ticket ID..."
+            placeholder={t.searchLogsPlaceholder || 'Search by VPA, phone number, or ticket ID...'}
             className="w-full rounded-[14px] py-2.5 pl-10 pr-4 text-xs font-mono font-medium text-white placeholder:text-white/25 focus:outline-none transition-all"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
           />
@@ -303,9 +305,9 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
       {/* 3-Way Segmented Tabs: Pre-Checks | Call Logs | Admin Tickets */}
       <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
         {[
-          { id: 'prechecks', label: '⚡ Pre-Checks' },
-          { id: 'calls', label: '📞 Calls' },
-          { id: 'tickets', label: '🎫 Tickets' },
+          { id: 'prechecks', label: t.prechecksTab || '⚡ Pre-Checks' },
+          { id: 'calls', label: t.callsTab || '📞 Calls' },
+          { id: 'tickets', label: t.ticketsTab || '🎫 Tickets' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -351,7 +353,7 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
 
                 <div className="p-3 rounded-[16px] space-y-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <div className="flex justify-between items-center text-[10px] text-white/40">
-                    <span>Amount Checked: <strong className="text-white font-mono">{item.amount}</strong></span>
+                    <span>Amount: <strong className="text-white font-mono">{item.amount}</strong></span>
                     <span>Note: <span className="italic text-white/60">{item.note}</span></span>
                   </div>
                   <p className="text-[11px] text-white/80 font-medium leading-relaxed pt-1">
@@ -415,7 +417,7 @@ export default function HistoryScreen({ onBack, backendUrl, user, currentLang = 
                     }`}
                   >
                     <Flag className="w-3.5 h-3.5 text-rose-400" />
-                    {reportedItems.includes(item.id) ? 'Reported (1930)' : 'Report Incident'}
+                    {reportedItems.includes(item.id) ? 'Reported (1930)' : (t.blockReport || 'Report Incident')}
                   </button>
                 </div>
               </div>

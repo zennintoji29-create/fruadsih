@@ -3,8 +3,10 @@ import {
   ArrowLeft, MoreVertical, ShieldCheck, Fingerprint, CreditCard,
   AlertTriangle, CheckCircle2, Lock, Shield
 } from 'lucide-react';
+import { translations } from '../translations';
 
-export default function FraudScoreAnalysis({ assessment, onBack }) {
+export default function FraudScoreAnalysis({ assessment, onBack, currentLang = 'en' }) {
+  const t = translations[currentLang] || translations.en;
   const score = assessment?.riskScore !== undefined ? (100 - assessment.riskScore) : 78;
   const isSafe = score >= 50;
 
@@ -50,9 +52,11 @@ export default function FraudScoreAnalysis({ assessment, onBack }) {
       <div className="px-5 pb-6">
         {/* Title */}
         <div className="text-center mb-5">
-          <h1 className="text-[22px] font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>Analysis Results</h1>
+          <h1 className="text-[22px] font-black text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            {t.threatAnalysis ? t.threatAnalysis.replace(':', '') : 'Analysis Results'}
+          </h1>
           <p className="text-[11.5px] text-white/45 mt-1 leading-relaxed">
-            Comprehensive security breakdown for your transaction.
+            {t.scoreSubtitle || 'Comprehensive security breakdown for your transaction.'}
           </p>
         </div>
 
@@ -65,7 +69,9 @@ export default function FraudScoreAnalysis({ assessment, onBack }) {
             boxShadow: isSafe ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 32px rgba(232,84,107,0.15)',
           }}
         >
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 font-mono">Overall Score</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 font-mono">
+            {t.deviceScore || 'Overall Score'}
+          </span>
 
           {/* SVG Gauge */}
           <div className="relative w-40 h-40 flex items-center justify-center">
@@ -105,7 +111,7 @@ export default function FraudScoreAnalysis({ assessment, onBack }) {
               ? <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
               : <AlertTriangle className="w-3.5 h-3.5 stroke-[2.5]" />
             }
-            {isSafe ? 'Good Standing' : 'High Risk Alert'}
+            {isSafe ? (t.threatLevelSafe || 'Good Standing') : (t.threatLevelCritical || 'High Risk Alert')}
           </div>
         </div>
 
@@ -119,12 +125,14 @@ export default function FraudScoreAnalysis({ assessment, onBack }) {
               >
                 <Fingerprint className="w-4.5 h-4.5 text-[#D8F828] stroke-[2]" />
               </div>
-              <h3 className="text-[12.5px] font-bold text-white">Identity Safety</h3>
+              <h3 className="text-[12.5px] font-bold text-white">
+                {t.protected || 'Identity Safety'}
+              </h3>
             </div>
             <span className="text-[12px] font-black text-[#D8F828] font-mono">92/100</span>
           </div>
           <p className="text-[10.5px] text-white/45 leading-relaxed pl-1">
-            Excellent. Your PII is well-secured. No recent data breaches detected involving your primary identity.
+            {t.scoreSubtitle || 'Zero threats detected in your active payments and communication channels.'}
           </p>
         </div>
 
@@ -138,7 +146,9 @@ export default function FraudScoreAnalysis({ assessment, onBack }) {
               >
                 <ShieldCheck className="w-4.5 h-4.5 text-emerald-400 stroke-[2]" />
               </div>
-              <h3 className="text-[12.5px] font-bold text-white">Payment Shield</h3>
+              <h3 className="text-[12.5px] font-bold text-white">
+                {t.upiMonitor || 'Payment Shield'}
+              </h3>
             </div>
             <span className="text-[12px] font-black text-emerald-400 font-mono">
               {isSafe ? '88/100' : '34/100'}
@@ -146,15 +156,15 @@ export default function FraudScoreAnalysis({ assessment, onBack }) {
           </div>
           <p className="text-[10.5px] text-white/45 leading-relaxed pl-1">
             {isSafe
-              ? 'No flagged VPAs or suspicious payment patterns detected in recent history.'
-              : 'High-risk patterns detected. Do not proceed with this transaction.'}
+              ? (t.noAlerts || 'No flagged VPAs or suspicious payment patterns detected.')
+              : (t.cautionNotice || 'High-risk patterns detected. Do not proceed with this transaction.')}
           </p>
         </div>
 
         {/* Back Button */}
         <button
           onClick={onBack}
-          className="w-full flex items-center justify-center gap-2.5 font-black text-[13px] uppercase tracking-wider rounded-[18px] active:scale-[0.97] transition-all"
+          className="w-full flex items-center justify-center gap-2.5 font-black text-[13px] uppercase tracking-wider rounded-[18px] active:scale-[0.97] transition-all cursor-pointer"
           style={{
             height: '52px',
             background: 'linear-gradient(135deg, #E4FF2E 0%, #C4E810 60%, #A8CC18 100%)',
@@ -163,7 +173,7 @@ export default function FraudScoreAnalysis({ assessment, onBack }) {
             fontFamily: 'Outfit, sans-serif',
           }}
         >
-          Back to Pay Shield
+          {t.backBtn || 'Back to Pay Shield'}
         </button>
       </div>
     </div>
