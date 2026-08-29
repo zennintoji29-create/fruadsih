@@ -283,9 +283,14 @@ public class CallOverlayService extends Service {
                 .addAction(android.R.drawable.ic_menu_view, "🛡️ Open Verix", pi);
 
             Notification notif = builder.build();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForeground(isOffhook ? 9002 : 9001, notif);
-            } else {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForeground(isOffhook ? 9002 : 9001, notif);
+                } else {
+                    nm.notify(isOffhook ? 9002 : 9001, notif);
+                }
+            } catch (Exception fgEx) {
+                Log.w(TAG, "startForeground constrained by OS, falling back to NotificationManager: " + fgEx.getMessage());
                 nm.notify(isOffhook ? 9002 : 9001, notif);
             }
         } catch (Exception e) {

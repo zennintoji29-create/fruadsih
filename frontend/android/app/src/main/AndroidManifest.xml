@@ -21,6 +21,7 @@
 
     <!-- Phone State & Call Screening for Real-Time Call Reputation -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
@@ -47,7 +48,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
     <application
         android:allowBackup="true"
@@ -82,11 +84,22 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
+        <!-- Persistent Real-Time Call Guardian & Notification Dispatcher Service -->
+        <service
+            android:name=".VerixCallGuardianService"
+            android:foregroundServiceType="specialUse|microphone"
+            android:enabled="true"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Real-time call screening and scam notification dispatch" />
+        </service>
+
         <!-- Native GSM Phone Call Interceptor & Scam Alert Receiver -->
         <receiver
             android:name=".PhoneCallReceiver"
             android:exported="true">
-            <intent-filter>
+            <intent-filter android:priority="999">
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
@@ -94,9 +107,13 @@
         <!-- Floating HUD Overlay & Persistent In-Call Defense Service -->
         <service
             android:name=".CallOverlayService"
-            android:foregroundServiceType="phoneCall"
+            android:foregroundServiceType="specialUse|microphone"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Real-time speech coercion detection and scam defense" />
+        </service>
     </application>
 
 </manifest>

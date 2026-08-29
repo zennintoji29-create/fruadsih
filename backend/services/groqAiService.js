@@ -1,5 +1,8 @@
 import Groq from 'groq-sdk';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 dotenv.config();
 
@@ -16,6 +19,53 @@ if (apiKey && apiKey.startsWith('gsk_')) {
 } else {
   console.warn('[Groq AI] Missing or invalid GROQ_API_KEY in environment.');
 }
+
+/**
+ * Transcribe real audio buffer / base64 using Groq Whisper Large v3
+ */
+export async function transcribeAudioWithGroq(audioBase64OrBuffer, options = {}) {
+  if (!groqClient || !audioBase64OrBuffer) return null;
+
+  let tempFilePath = null;
+  try {
+    let buffer;
+    if (typeof audioBase64OrBuffer === 'string') {
+      const cleanBase64 = audioBase64OrBuffer.replace(/^data:audio\/\w+;base64,/, '');
+      buffer = Buffer.from(cleanBase64, 'base64');
+    } else if (Buffer.isBuffer(audioBase64OrBuffer)) {
+      buffer = audioBase64OrBuffer;
+    } else {
+      return null;
+    }
+
+    // Write transiently to tmp file for Groq SDK multipart stream
+    const tempFileName = `verix_audio_${Date.now()}_${Math.random().toString(36).substring(7)}.m4a`;
+    tempFilePath = path.join(os.tmpdir(), tempFileName);
+    fs.writeFileSync(tempFilePath, buffer);
+
+    const language = options.language === 'hi' ? 'hi' : undefined;
+
+    const transcription = await groqClient.audio.transcriptions.create({
+      file: fs.createReadStream(tempFilePath),
+      model: 'whisper-large-v3-turbo',
+      prompt: 'Cyber crime, Digital Arrest, Mumbai Police, CBI officer, verification deposit, Aadhaar card, FIR, bank account, OTP, Electricity bill.',
+      response_format: 'json',
+      language: language,
+      temperature: 0.0
+    });
+
+    console.log('[Groq AI Whisper] Real audio transcribed successfully:', transcription?.text?.slice(0, 80));
+    return transcription?.text || null;
+  } catch (err) {
+    console.warn('[Groq AI Whisper] Transcription failed, fallback will be used:', err.message);
+    return null;
+  } finally {
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
+      try { fs.unlinkSync(tempFilePath); } catch (e) {}
+    }
+  }
+}
+
 
 /**
  * Perform real-time LLM Scam Transcript & Voice Phishing Analysis using Groq AI

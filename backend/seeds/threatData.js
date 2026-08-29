@@ -96,6 +96,48 @@ export const SEED_THREAT_RECORDS = [
     details: 'Automated extortion calls with morphed photo threats.',
     tags: ['loan_app', 'extortion', 'harassment'],
     reportedAt: '2026-08-16T18:10:00.000Z'
+  },
+  {
+    id: 'threat-phone-004',
+    type: 'PHONE',
+    identifier: '+919477530475',
+    name: 'Flagged Extortionist - Digital Arrest Syndicate',
+    category: 'DIGITAL_ARREST',
+    riskScore: 99,
+    isBlacklisted: true,
+    source: 'I4C_NATIONAL_CYBERCRIME_PORTAL_1930',
+    reportCount: 245,
+    details: 'Impersonates Mumbai Cyber Crime & Narcotics bureau demanding money transfer under arrest threat.',
+    tags: ['digital_arrest', 'fake_police', 'cbi_extortion'],
+    reportedAt: '2026-08-20T10:00:00.000Z'
+  },
+  {
+    id: 'threat-phone-005',
+    type: 'PHONE',
+    identifier: '9477530475',
+    name: 'Flagged Extortionist - Digital Arrest Syndicate',
+    category: 'DIGITAL_ARREST',
+    riskScore: 99,
+    isBlacklisted: true,
+    source: 'I4C_NATIONAL_CYBERCRIME_PORTAL_1930',
+    reportCount: 245,
+    details: 'Impersonates Mumbai Cyber Crime & Narcotics bureau demanding money transfer under arrest threat.',
+    tags: ['digital_arrest', 'fake_police', 'cbi_extortion'],
+    reportedAt: '2026-08-20T10:00:00.000Z'
+  },
+  {
+    id: 'threat-phone-006',
+    type: 'PHONE',
+    identifier: '+91 94775 30475',
+    name: 'Flagged Extortionist - Digital Arrest Syndicate',
+    category: 'DIGITAL_ARREST',
+    riskScore: 99,
+    isBlacklisted: true,
+    source: 'I4C_NATIONAL_CYBERCRIME_PORTAL_1930',
+    reportCount: 245,
+    details: 'Impersonates Mumbai Cyber Crime & Narcotics bureau demanding money transfer under arrest threat.',
+    tags: ['digital_arrest', 'fake_police', 'cbi_extortion'],
+    reportedAt: '2026-08-20T10:00:00.000Z'
   }
 ];
 

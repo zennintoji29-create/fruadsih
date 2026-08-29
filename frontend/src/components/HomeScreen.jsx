@@ -257,39 +257,69 @@ export default function HomeScreen({ user, onNavigate, currentLang = 'en', onLan
           </button>
         </div>
 
-        {/* ── 4. SCAM CALL SIMULATION BANNER ── */}
-        <div 
-          className="rounded-[22px] p-3.5 flex items-center justify-between gap-3"
-          style={glassDark}
-        >
-          <div className="flex items-center gap-3">
-            <div 
-              className="w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(232,84,107,0.18)', border: '1px solid rgba(232,84,107,0.3)' }}
-            >
-              <PhoneCall className="w-5 h-5 text-rose-400" />
-            </div>
-            <div>
-              <h4 className="text-[12.5px] font-bold text-white">
-                Test Scam Call Simulation
+        {/* ── 4. SCAM CALL & SIM SWAP SIMULATION CONTROLS ── */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Scam Call Simulator */}
+          <div 
+            className="rounded-[22px] p-3.5 flex flex-col justify-between"
+            style={glassDark}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div 
+                className="w-8 h-8 rounded-[12px] flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(232,84,107,0.18)', border: '1px solid rgba(232,84,107,0.3)' }}
+              >
+                <PhoneCall className="w-4 h-4 text-rose-400" />
+              </div>
+              <h4 className="text-[11.5px] font-bold text-white leading-tight">
+                Call HUD
               </h4>
-              <p className="text-[10px] text-white/45">
-                Test Verix In-Call Defense &amp; Floating HUD
-              </p>
             </div>
+            <p className="text-[9.5px] text-white/45 mb-2 leading-snug">
+              Simulate Digital Arrest scam call
+            </p>
+            <button
+              onClick={() => onTriggerCallSimulation && onTriggerCallSimulation('+919477530475')}
+              className="w-full py-2 rounded-[12px] text-[10.5px] font-bold text-white active:scale-95 transition-all shadow-md"
+              style={{
+                background: 'linear-gradient(135deg, #E8546B 0%, #C92040 100%)',
+                boxShadow: '0 4px 12px rgba(232,84,107,0.35)',
+              }}
+            >
+              Test Call Alert
+            </button>
           </div>
 
-          <button
-            onClick={() => onTriggerCallSimulation && onTriggerCallSimulation('+919876543210')}
-            className="px-3.5 py-2 rounded-[14px] text-[11px] font-bold text-white shrink-0 active:scale-95 transition-all shadow-md"
-            style={{
-              background: 'linear-gradient(135deg, #E8546B 0%, #C92040 100%)',
-              boxShadow: '0 4px 12px rgba(232,84,107,0.35)',
-            }}
+          {/* SIM Swap Anomaly Simulator (Req 7) */}
+          <div 
+            className="rounded-[22px] p-3.5 flex flex-col justify-between"
+            style={glassDark}
           >
-            Simulate
-          </button>
+            <div className="flex items-center gap-2 mb-2">
+              <div 
+                className="w-8 h-8 rounded-[12px] flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.3)' }}
+              >
+                <Radio className="w-4 h-4 text-amber-400" />
+              </div>
+              <h4 className="text-[11.5px] font-bold text-white leading-tight">
+                SIM Swap
+              </h4>
+            </div>
+            <p className="text-[9.5px] text-white/45 mb-2 leading-snug">
+              Simulate IMSI carrier change
+            </p>
+            <button
+              onClick={() => {
+                alert('🚨 SIM SWAP DETECTED: Physical SIM change detected on your phone number (+91 94775 30475). A 24-hour security cooling hold is recommended to protect your bank accounts from OTP hijacking.');
+              }}
+              className="w-full py-2 rounded-[12px] text-[10.5px] font-bold text-black active:scale-95 transition-all shadow-md bg-amber-400 hover:bg-amber-300"
+            >
+              Test SIM Swap
+            </button>
+          </div>
         </div>
+
 
         {/* ── 5. SYSTEM STATUS CARD ── */}
         <div 

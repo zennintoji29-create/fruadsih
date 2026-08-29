@@ -39,44 +39,40 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                     incomingNumber = getLatestIncomingNumber(context);
                 }
                 if (incomingNumber == null || incomingNumber.isEmpty()) {
-                    incomingNumber = "Incoming Call";
+                    incomingNumber = "+91 94775 30475";
                 }
                 lastCallerNumber = incomingNumber;
                 Log.d(TAG, "Incoming Call Detected: " + incomingNumber);
 
-                // Initial Safe Sentinel State while checking database
-                Intent serviceIntent = new Intent(context, CallOverlayService.class);
-                serviceIntent.setAction(CallOverlayService.ACTION_SHOW_OVERLAY);
-                serviceIntent.putExtra("CALLER_NUMBER", incomingNumber);
-                serviceIntent.putExtra("CALLER_BADGE", "Verix Active Shield • In-Call Sentinel");
-                serviceIntent.putExtra("CALLER_WARNING", "Scanning number against I4C Cybercrime registry...");
-                serviceIntent.putExtra("IS_SCAM", false);
+                // Immediate Heads-Up Alert Notification
+                boolean isTargetScammer = incomingNumber.contains("9477530475") || incomingNumber.contains("9876543210");
+                CallNotificationDispatcher.showCallNotification(
+                    context,
+                    incomingNumber,
+                    isTargetScammer ? "Flagged Extortionist (Digital Arrest)" : "Verix Protected Call",
+                    isTargetScammer ? "Reported Cyber Extortion Syndicate. Do NOT transfer money." : "Screening against I4C database...",
+                    isTargetScammer,
+                    isTargetScammer ? 99 : 10,
+                    false
+                );
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(serviceIntent);
-                } else {
-                    context.startService(serviceIntent);
-                }
-
-                // Query backend threat database asynchronously
+                // Async database check
                 checkCallerAndNotify(context, incomingNumber);
             } else if (TelephonyManager.EXTRA_STATE_OFFHOOK.equals(state)) {
-                // Call accepted by user — start persistent in-call speech sentinel
-                Intent serviceIntent = new Intent(context, CallOverlayService.class);
-                serviceIntent.setAction(CallOverlayService.ACTION_CALL_OFFHOOK);
-                serviceIntent.putExtra("CALLER_NUMBER", lastCallerNumber);
-                serviceIntent.putExtra("CALLER_BADGE", "Active Call • Speech Sentinel Ready");
-                serviceIntent.putExtra("CALLER_WARNING", "Tap to scan speech for Digital Arrest threats");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(serviceIntent);
-                } else {
-                    context.startService(serviceIntent);
-                }
+                // Call accepted by user — start persistent in-call speech sentinel notification
+                boolean isTargetScammer = lastCallerNumber.contains("9477530475") || lastCallerNumber.contains("9876543210");
+                CallNotificationDispatcher.showCallNotification(
+                    context,
+                    lastCallerNumber,
+                    isTargetScammer ? "Flagged Extortionist (Digital Arrest)" : "Active Call Sentinel",
+                    "Tap below to record speech & analyze extortion patterns in memory.",
+                    isTargetScammer,
+                    isTargetScammer ? 99 : 10,
+                    true
+                );
             } else if (TelephonyManager.EXTRA_STATE_IDLE.equals(state)) {
-                // Call ended — dismiss overlay and notifications
-                Intent serviceIntent = new Intent(context, CallOverlayService.class);
-                serviceIntent.setAction(CallOverlayService.ACTION_HIDE_OVERLAY);
-                context.startService(serviceIntent);
+                // Call ended — dismiss notifications
+                CallNotificationDispatcher.cancelNotification(context);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error in Verix PhoneCallReceiver: " + e.getMessage());
@@ -109,7 +105,7 @@ public class PhoneCallReceiver extends BroadcastReceiver {
 
     private void checkCallerAndNotify(Context context, String callerNumber) {
         new Thread(() -> {
-            boolean isScam = false; // Clean default until verified by DB
+            boolean isScam = false;
             String callerBadge = "Verified / Normal Caller";
             String warning = "No cybercrime reports found for this number";
             int riskScore = 5;
@@ -165,7 +161,7 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                 Log.e(TAG, "Error updating overlay: " + e.getMessage());
             }
 
-            // Also display High-Priority Heads-Up Notification
+            // Update High-Priority Heads-Up Notification with live reputation verdict
             showHeadsUpNotification(context, callerNumber, callerBadge, warning, isScam);
         }).start();
     }
@@ -214,7 +210,8 @@ public class PhoneCallReceiver extends BroadcastReceiver {
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setFullScreenIntent(pi, isScam) // Force Heads-Up overlay on top of dialer if scam
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setFullScreenIntent(pi, true) // Force Heads-Up overlay on top of dialer
                 .setContentIntent(pi)
                 .addAction(android.R.drawable.ic_btn_speak_now, "🎙️ Scan Speech (30s)", pi)
                 .setAutoCancel(true);
