@@ -121,18 +121,33 @@ async function startServer() {
 
       // 💓 Render 10-Minute Anti-Sleep Keep-Alive Heartbeat (Zero Cold Starts)
       const PING_INTERVAL = 10 * 60 * 1000; // 10 minutes
-      const serviceUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-      
-      console.log(`[Keep-Alive] Initializing 10-minute anti-sleep heartbeat for: ${serviceUrl}`);
-      setInterval(async () => {
+      const BACKEND_RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://fruadsih.onrender.com';
+      const BANK_PORTAL_URL = 'https://verix-bank.onrender.com';
+
+      const pingServices = async () => {
+        const time = new Date().toLocaleTimeString();
+        // Ping Backend
         try {
-          const res = await fetch(`${serviceUrl}/api/health`);
-          const data = await res.json();
-          console.log(`[Keep-Alive Ping] 💓 Pinged ${serviceUrl}/api/health - Status: ${data.status} at ${new Date().toLocaleTimeString()}`);
-        } catch (pingErr) {
-          console.warn('[Keep-Alive Notice]:', pingErr.message);
+          const res = await fetch(`${BACKEND_RENDER_URL}/api/health`);
+          console.log(`[Keep-Alive ${time}] 💓 Backend (${BACKEND_RENDER_URL}) Ping Status: ${res.status}`);
+        } catch (e) {
+          console.warn(`[Keep-Alive ${time}] Backend ping warning:`, e.message);
         }
-      }, PING_INTERVAL);
+
+        // Ping Bank Portal
+        try {
+          const bankRes = await fetch(`${BANK_PORTAL_URL}/health`);
+          console.log(`[Keep-Alive ${time}] 🏦 Bank Portal (${BANK_PORTAL_URL}) Ping Status: ${bankRes.status}`);
+        } catch (e) {
+          console.warn(`[Keep-Alive ${time}] Bank Portal ping warning:`, e.message);
+        }
+      };
+
+      console.log(`[Keep-Alive] Initializing 10-minute anti-sleep heartbeat mesh...`);
+      // Initial ping on boot
+      pingServices();
+      // Continuous 10-minute heartbeat
+      setInterval(pingServices, PING_INTERVAL);
     });
   } catch (error) {
     console.error('Failed to initialize server:', error);
