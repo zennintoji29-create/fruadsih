@@ -87,22 +87,33 @@ export class VoicePhishController {
         });
       }
 
-      // 2. Auto-save flagged caller number to Threat Database if provided
+      // 2. Auto-save flagged caller number to Threat Database if risk score >= 50%
       let savedToDb = false;
       let dbRecord = null;
-      if (callerNumber && callerNumber.trim() && callerNumber !== 'SUSPECTED_VOICE_CALL') {
-        const cleanNumber = callerNumber.trim();
-        const isThreat = analysis.phishingDetected || (analysis.confidenceScore >= 60);
+      let targetNumberToSave = callerNumber && callerNumber.trim() && callerNumber !== 'SUSPECTED_VOICE_CALL' ? callerNumber.trim() : null;
 
-        dbRecord = await ThreatDbService.reportScammer({
-          identifier: cleanNumber,
-          type: 'PHONE',
-          category: analysis.primaryCategory || 'VOICE_PHISHING',
-          details: `Flagged via Voice AI Analysis (${analysis.riskLevel}). Threat summary: "${analysis.summary || ''}"`,
-          source: 'GROQ_WHISPER_VOICE_AI',
-          riskScore: analysis.confidenceScore || (isThreat ? 95 : 10)
-        });
-        savedToDb = true;
+      // If no explicit caller number passed, attempt to extract phone from transcript
+      if (!targetNumberToSave && transcriptionText) {
+        const extracted = transcriptionText.match(/(\+?91[\s-]?)?[6-9]\d{9}/g);
+        if (extracted && extracted.length > 0) {
+          targetNumberToSave = extracted[0].replace(/\s+/g, '');
+        }
+      }
+
+      if (targetNumberToSave) {
+        const isThreat = analysis.phishingDetected || (analysis.confidenceScore >= 50);
+
+        if (isThreat) {
+          dbRecord = await ThreatDbService.reportScammer({
+            identifier: targetNumberToSave,
+            type: targetNumberToSave.includes('@') ? 'VPA' : 'PHONE',
+            category: analysis.primaryCategory || 'VOICE_PHISHING',
+            details: `Flagged via Voice AI Analysis (${analysis.riskLevel} - ${analysis.confidenceScore}%). Threat summary: "${analysis.summary || ''}"`,
+            source: 'GROQ_WHISPER_VOICE_AI',
+            riskScore: analysis.confidenceScore || 95
+          });
+          savedToDb = true;
+        }
       }
 
       // 3. Response payload with privacy guarantee badge (Zero Audio Saved)

@@ -92,27 +92,28 @@ export class ThreatDbService {
     return null;
   }
 
-  static async reportScammer({ identifier, type, category, details, reportedBy = 'USER_COMMUNITY', source = 'USER_REPORT' }) {
+  static async reportScammer({ identifier, type, category, details, reportedBy = 'USER_COMMUNITY', source = 'USER_REPORT', riskScore = 85 }) {
     if (!identifier) throw new Error('Identifier is required');
     const key = identifier.trim().toLowerCase();
+    const effectiveScore = Number(riskScore) || 85;
 
     let record = db.threatRegistry.get(key);
     if (record) {
       record.reportCount += 1;
       record.details = `${record.details} | Update: ${details}`;
-      record.riskScore = Math.min(100, record.riskScore + 5);
-      if (record.reportCount >= 3) {
+      record.riskScore = Math.max(record.riskScore, effectiveScore);
+      if (record.riskScore >= 50 || record.reportCount >= 2) {
         record.isBlacklisted = true;
       }
     } else {
       record = {
-        id: `threat-${Date.now()}`,
+        id: `threat-${Date.now()}-${Math.floor(Math.random()*1000)}`,
         type: type || (identifier.includes('@') ? 'VPA' : 'PHONE'),
         identifier: identifier.trim(),
         name: `Reported ${category || 'Fraud'} Target`,
         category: category || 'SOCIAL_ENGINEERING',
-        riskScore: 85,
-        isBlacklisted: true,
+        riskScore: effectiveScore,
+        isBlacklisted: effectiveScore >= 50,
         source: source,
         reportCount: 1,
         details: details || 'Reported by user as fraud / spam.',

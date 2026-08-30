@@ -433,8 +433,8 @@ export default function App() {
   // ── 2. DESKTOP BROWSER / SIMULATOR WRAPPER ──
   return (
     <div className="min-h-screen bg-[#07090E] flex flex-col justify-between selection:bg-[#00F0A0] selection:text-[#090C10] font-sans">
-      <header className="border-b border-white/[0.08] bg-[#0D1117] sticky top-0 z-50 backdrop-blur-md px-6 py-3.5 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="border-b border-white/[0.08] bg-[#0D1117] sticky top-0 z-50 backdrop-blur-md px-4 sm:px-6 py-3.5 shadow-md">
+        <div className={`mx-auto flex items-center justify-between ${activePortal === 'bank' ? 'max-w-[1920px]' : 'max-w-7xl'}`}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#171E2B] border border-white/[0.12] flex items-center justify-center text-[#00F0A0] shadow-sm">
               <Shield className="w-5 h-5 stroke-[2.4]" />
@@ -477,7 +477,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8">
+      <main className={`flex-1 w-full ${activePortal === 'bank' ? 'p-3 sm:p-6 max-w-[1920px] mx-auto' : 'flex items-center justify-center p-4 md:p-8'}`}>
         {activePortal === 'bank' ? (
           <BankPortal backendUrl={BACKEND_URL} />
         ) : (
@@ -514,7 +514,7 @@ export default function App() {
         )}
       </main>
 
-      <footer className="border-t border-slate-800/80 py-2.5 px-4 text-center text-xs text-slate-400 flex items-center justify-between max-w-7xl mx-auto w-full">
+      <footer className="border-t border-slate-800/80 py-2.5 px-4 text-center text-xs text-slate-400 flex items-center justify-between max-w-[1920px] mx-auto w-full">
         <span>🛡️ ShieldX Native App • SIH S40</span>
         <span className="flex items-center gap-1 text-[#b9d175] font-mono">
           <CheckCircle2 className="w-3.5 h-3.5 text-[#b9d175]" /> Backend Online (Port 5000)
