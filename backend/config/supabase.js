@@ -52,15 +52,13 @@ export async function logSupabaseTransaction(txLog) {
     const { data, error } = await supabase
       .from('transaction_logs')
       .insert([{
-        sender_vpa: txLog.senderVpa || txLog.sender_vpa,
-        receiver_vpa: txLog.receiverVpa || txLog.receiver_vpa,
-        amount: txLog.amount,
-        risk_score: txLog.riskScore || txLog.risk_score,
+        sender_vpa: txLog.senderVpa || txLog.sender_vpa || 'user@upi',
+        receiver_vpa: txLog.receiverVpa || txLog.receiver_vpa || txLog.vpa || 'payee@upi',
+        amount: Number(txLog.amount) || 0,
+        risk_score: Number(txLog.riskScore ?? txLog.risk_score ?? 0),
         action_taken: txLog.actionTaken || txLog.action_taken || 'ALLOWED',
-        explanation: txLog.explanation,
-        metadata: txLog.metadata || {}
-      }])
-      .select();
+        explanation: typeof txLog.explanation === 'object' ? JSON.stringify(txLog.explanation) : (txLog.explanation || '')
+      }]);
 
     if (error) {
       console.warn('[Supabase] Transaction insert error:', error.message);

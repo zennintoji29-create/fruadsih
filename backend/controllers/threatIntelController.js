@@ -7,7 +7,7 @@ export class ThreatIntelController {
    */
   static async lookup(req, res) {
     try {
-      const query = req.query.query || req.query.vpa || req.query.phone;
+      const query = req.query.query || req.query.identifier || req.query.q || req.query.vpa || req.query.phone;
       if (!query) {
         return res.status(400).json({
           success: false,
@@ -85,21 +85,24 @@ export class ThreatIntelController {
         return acc;
       }, {});
 
+      const statsPayload = {
+        totalThreats,
+        blacklistedCount,
+        vpaCount,
+        phoneCount,
+        categoryDistribution,
+        sourceBreakdown: {
+          'I4C_NATIONAL_CYBER_CRIME_PORTAL': threats.filter(t => t.source?.includes('I4C')).length,
+          'SANCHAR_SAATHI_CHAKSHU': threats.filter(t => t.source?.includes('SANCHAR')).length,
+          'NPCI_MULE_ACCOUNT_REGISTRY': threats.filter(t => t.source?.includes('NPCI')).length,
+          'CROWDSOURCED_COMMUNITY': threats.filter(t => t.source?.includes('USER') || t.source?.includes('CROWD')).length
+        }
+      };
+
       return res.status(200).json({
         success: true,
-        stats: {
-          totalThreats,
-          blacklistedCount,
-          vpaCount,
-          phoneCount,
-          categoryDistribution,
-          sourceBreakdown: {
-            'I4C_NATIONAL_CYBER_CRIME_PORTAL': threats.filter(t => t.source?.includes('I4C')).length,
-            'SANCHAR_SAATHI_CHAKSHU': threats.filter(t => t.source?.includes('SANCHAR')).length,
-            'NPCI_MULE_ACCOUNT_REGISTRY': threats.filter(t => t.source?.includes('NPCI')).length,
-            'CROWDSOURCED_COMMUNITY': threats.filter(t => t.source?.includes('USER') || t.source?.includes('CROWD')).length
-          }
-        },
+        stats: statsPayload,
+        data: statsPayload,
         threats
       });
     } catch (error) {

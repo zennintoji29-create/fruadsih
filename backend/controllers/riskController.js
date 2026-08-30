@@ -14,6 +14,8 @@ export class RiskController {
         vpa,
         amount,
         note,
+        contextNote,
+        message,
         recipientName,
         language,
         deviceContext,
@@ -27,11 +29,13 @@ export class RiskController {
         });
       }
 
+      const effectiveNote = note || contextNote || message || '';
+
       const result = await RiskScoringService.evaluateTransactionRisk({
         userId,
         vpa,
         amount,
-        note,
+        note: effectiveNote,
         language,
         deviceContext: deviceContext || {},
         callContext: callContext || (deviceContext?.activeCallDetected ? { isOnCall: true } : {})

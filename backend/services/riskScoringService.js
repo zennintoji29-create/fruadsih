@@ -40,13 +40,13 @@ export class RiskScoringService {
     let score = 0;
     const factorDetections = [];
 
-    // Factor A: VPA Threat History (Weight: 45%)
+    // Factor A: VPA Threat History (Direct Cybercrime Blacklist Enforcement)
     if (threatRecord) {
-      if (threatRecord.isBlacklisted) {
-        score += 55;
+      if (threatRecord.isBlacklisted || threatRecord.riskScore >= 80) {
+        score += Math.max(90, threatRecord.riskScore || 95);
         factorDetections.push(`Known malicious VPA registered in ${threatRecord.source}`);
       } else {
-        score += (threatRecord.riskScore * 0.4);
+        score += Math.max(40, threatRecord.riskScore * 0.8);
         factorDetections.push(`Suspicious VPA characteristics (${threatRecord.name})`);
       }
     } else if (isTrustedPayee) {

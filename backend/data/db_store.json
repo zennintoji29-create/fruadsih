@@ -286,6 +286,39 @@
         "digital arrest extortion"
       ],
       "reportedAt": "2026-08-22T22:05:32.955Z"
+    },
+    "+919477530475": {
+      "id": "eb8c8e24-2bdf-453e-b034-4fb30e85d0de",
+      "type": "PHONE",
+      "identifier": "+919477530475",
+      "name": "Flagged (VOICE_PHISHING)",
+      "category": "VOICE_PHISHING",
+      "riskScore": 85,
+      "isBlacklisted": true,
+      "source": "SUPABASE_CLOUD_REGISTRY",
+      "reportCount": 1,
+      "details": "Suspected Digital Arrest / Fake Police Extortion Call",
+      "tags": [
+        "supabase",
+        "voice_phishing"
+      ]
+    },
+    "+91 99999 88888": {
+      "id": "threat-1788098878370",
+      "type": "PHONE",
+      "identifier": "+91 99999 88888",
+      "name": "Reported FAKE_POLICE_CBI Target",
+      "category": "FAKE_POLICE_CBI",
+      "riskScore": 100,
+      "isBlacklisted": true,
+      "source": "GROQ_WHISPER_VOICE_AI",
+      "reportCount": 6,
+      "details": "Flagged via Voice AI Analysis (CRITICAL). Threat summary: \"The caller pretends to be a Crime Branch officer and threatens a bail payment, which is a classic police impersonation scam demanding money. This is a clear voice phishing attempt.\" | Update: Flagged via Voice AI Analysis (CRITICAL). Threat summary: \"The caller pretends to be a Crime Branch officer demanding a bail payment for an alleged illegal parcel linked to the victim's Aadhaar, which is a classic digital arrest scam. No legitimate authority would request money in this manner, indicating a high‑risk phishing attempt.\" | Update: Flagged via Voice AI Analysis (CRITICAL). Threat summary: \"The caller pretends to be a Crime Branch officer and threatens the victim with an illegal parcel claim, demanding a ₹20,000 bail payment. This is a classic fake police/ digital arrest scam using coercion to extract money.\" | Update: Flagged via Voice AI Analysis (CRITICAL). Threat summary: \"The caller pretends to be a Crime Branch officer demanding a bail payment for an alleged illegal parcel linked to the victim's Aadhaar. This is a classic police‑impersonation scam using coercive financial threats.\" | Update: Flagged via Voice AI Analysis (CRITICAL). Threat summary: \"The caller pretends to be a Crime Branch officer and claims the victim has an illegal parcel linked to Aadhaar, demanding a ₹20,000 bail. This is a classic digital arrest scam using authority intimidation to extract money.\" | Update: Flagged via Voice AI Analysis (CRITICAL). Threat summary: \"The caller pretends to be a Crime Branch officer demanding a bail payment for an alleged illegal parcel linked to the victim's Aadhaar, a classic impersonation scam. This constitutes a fraudulent financial demand under false authority.\"",
+      "tags": [
+        "user_reported",
+        "fake_police_cbi"
+      ],
+      "reportedAt": "2026-08-30T14:07:58.370Z"
     }
   },
   "transactionLogs": {
@@ -649,6 +682,718 @@
         "screenSharingActive": false
       },
       "timestamp": "2026-08-29T23:13:20.425Z"
+    },
+    "risk-eval-0a9a8d2a-b94a-43ff-b43a-2bb826d0a0ec": {
+      "assessmentId": "risk-eval-0a9a8d2a-b94a-43ff-b43a-2bb826d0a0ec",
+      "vpa": "scammer.cybercell@oksbi",
+      "amount": 15000,
+      "riskScore": 55,
+      "riskLevel": "CRITICAL_BLOCKED",
+      "recommendedAction": "RESTRICT_BLOCK",
+      "isBlocked": true,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 98,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "✅ Safe Risk Score (55/100): Transaction passes pre-flight safety checks.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "KNOWN_SCAMMER_MATCH",
+            "title": "Known Scammer Record Found",
+            "description": "This recipient (scammer.cybercell@oksbi) has been reported 142 times in national cybercrime databases."
+          }
+        ],
+        "contrastiveReasons": [],
+        "userGuidance": {
+          "canBypassWithConfirmation": false,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": {
+        "id": "threat-vpa-001",
+        "type": "VPA",
+        "identifier": "scammer.cybercell@oksbi",
+        "name": "Fake Cyber Police Verification",
+        "category": "DIGITAL_ARREST",
+        "riskScore": 98,
+        "isBlacklisted": true,
+        "source": "I4C_NATIONAL_CYBER_CRIME_PORTAL",
+        "reportCount": 142,
+        "details": "Impersonates Delhi Police / CBI requesting urgent security clearance fee.",
+        "tags": [
+          "digital_arrest",
+          "fake_police",
+          "cbi_impersonation"
+        ],
+        "reportedAt": "2026-08-10T10:30:00.000Z"
+      },
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:09:20.301Z"
+    },
+    "risk-eval-9c51ccba-bc37-4a8f-894f-f7ee2a6bcbba": {
+      "assessmentId": "risk-eval-9c51ccba-bc37-4a8f-894f-f7ee2a6bcbba",
+      "vpa": "kirana.store@okhdfcbank",
+      "amount": 450,
+      "riskScore": 0,
+      "riskLevel": "SAFE",
+      "recommendedAction": "ALLOW",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "✅ Safe Risk Score (0/100): Transaction passes pre-flight safety checks.",
+        "bulletPoints": [
+          {
+            "severity": "LOW",
+            "code": "VERIFIED_CLEAN",
+            "title": "Clean Transaction Profile",
+            "description": "Recipient VPA and device interaction patterns show normal, safe behavior."
+          }
+        ],
+        "contrastiveReasons": [],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:09:22.436Z"
+    },
+    "risk-eval-a2fb6bc4-b527-44df-9722-a377f43cc3d0": {
+      "assessmentId": "risk-eval-a2fb6bc4-b527-44df-9722-a377f43cc3d0",
+      "vpa": "officer.verify@okicici",
+      "amount": 25000,
+      "riskScore": 13,
+      "riskLevel": "CAUTION",
+      "recommendedAction": "WARN_WITH_CONFIRMATION",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": true,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 65
+      },
+      "explanation": {
+        "summary": "✅ Safe Risk Score (13/100): Transaction passes pre-flight safety checks.",
+        "bulletPoints": [
+          {
+            "severity": "MEDIUM",
+            "code": "USER_THRESHOLD_EXCEEDED",
+            "title": "Safety Limit Exceeded",
+            "description": "Amount (₹25000) exceeds your configured safety threshold of ₹15000."
+          }
+        ],
+        "contrastiveReasons": [
+          "The recipient is not blacklisted, but manual confirmation is required due to the large amount."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:09:22.790Z"
+    },
+    "risk-eval-ca038c95-6a4e-4eeb-9e12-1065bfcd87bc": {
+      "assessmentId": "risk-eval-ca038c95-6a4e-4eeb-9e12-1065bfcd87bc",
+      "vpa": "scammer.cybercell@oksbi",
+      "amount": 15000,
+      "riskScore": 98,
+      "riskLevel": "CRITICAL_BLOCKED",
+      "recommendedAction": "RESTRICT_BLOCK",
+      "isBlocked": true,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 98,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (98/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "KNOWN_SCAMMER_MATCH",
+            "title": "Known Scammer Record Found",
+            "description": "This recipient (scammer.cybercell@oksbi) has been reported 142 times in national cybercrime databases."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": false,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": {
+        "id": "threat-vpa-001",
+        "type": "VPA",
+        "identifier": "scammer.cybercell@oksbi",
+        "name": "Fake Cyber Police Verification",
+        "category": "DIGITAL_ARREST",
+        "riskScore": 98,
+        "isBlacklisted": true,
+        "source": "I4C_NATIONAL_CYBER_CRIME_PORTAL",
+        "reportCount": 142,
+        "details": "Impersonates Delhi Police / CBI requesting urgent security clearance fee.",
+        "tags": [
+          "digital_arrest",
+          "fake_police",
+          "cbi_impersonation"
+        ],
+        "reportedAt": "2026-08-10T10:30:00.000Z"
+      },
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:11:41.198Z"
+    },
+    "risk-eval-56d107c6-2f51-4931-b9cf-3b4100b3416f": {
+      "assessmentId": "risk-eval-56d107c6-2f51-4931-b9cf-3b4100b3416f",
+      "vpa": "kirana.store@okhdfcbank",
+      "amount": 450,
+      "riskScore": 0,
+      "riskLevel": "SAFE",
+      "recommendedAction": "ALLOW",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "✅ Safe Risk Score (0/100): Transaction passes pre-flight safety checks.",
+        "bulletPoints": [
+          {
+            "severity": "LOW",
+            "code": "VERIFIED_CLEAN",
+            "title": "Clean Transaction Profile",
+            "description": "Recipient VPA and device interaction patterns show normal, safe behavior."
+          }
+        ],
+        "contrastiveReasons": [],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:11:43.125Z"
+    },
+    "risk-eval-438f93fa-ca32-411f-8cbb-2dc2fe894de3": {
+      "assessmentId": "risk-eval-438f93fa-ca32-411f-8cbb-2dc2fe894de3",
+      "vpa": "officer.verify@okicici",
+      "amount": 25000,
+      "riskScore": 98,
+      "riskLevel": "HIGH_RISK",
+      "recommendedAction": "WARN_WITH_CONFIRMATION",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": true,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 65
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (98/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "COERCIVE_MESSAGE_PATTERN",
+            "title": "Extortion / Impersonation In Message",
+            "description": "Payment message contains high-risk police impersonation / extortion indicators: \"arrest, penalty, deposit, cbi, do not disconnect, verification\""
+          },
+          {
+            "severity": "MEDIUM",
+            "code": "USER_THRESHOLD_EXCEEDED",
+            "title": "Safety Limit Exceeded",
+            "description": "Amount (₹25000) exceeds your configured safety threshold of ₹15000."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:11:46.127Z"
+    },
+    "risk-eval-4becd53e-bd64-4e56-9e31-33e34e497a80": {
+      "assessmentId": "risk-eval-4becd53e-bd64-4e56-9e31-33e34e497a80",
+      "vpa": "scammer.cybercell@oksbi",
+      "amount": 15000,
+      "riskScore": 98,
+      "riskLevel": "CRITICAL_BLOCKED",
+      "recommendedAction": "RESTRICT_BLOCK",
+      "isBlocked": true,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 98,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (98/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "KNOWN_SCAMMER_MATCH",
+            "title": "Known Scammer Record Found",
+            "description": "This recipient (scammer.cybercell@oksbi) has been reported 142 times in national cybercrime databases."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": false,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": {
+        "id": "threat-vpa-001",
+        "type": "VPA",
+        "identifier": "scammer.cybercell@oksbi",
+        "name": "Fake Cyber Police Verification",
+        "category": "DIGITAL_ARREST",
+        "riskScore": 98,
+        "isBlacklisted": true,
+        "source": "I4C_NATIONAL_CYBER_CRIME_PORTAL",
+        "reportCount": 142,
+        "details": "Impersonates Delhi Police / CBI requesting urgent security clearance fee.",
+        "tags": [
+          "digital_arrest",
+          "fake_police",
+          "cbi_impersonation"
+        ],
+        "reportedAt": "2026-08-10T10:30:00.000Z"
+      },
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:12:49.402Z"
+    },
+    "risk-eval-ee889a0a-5390-4267-a128-2dcc8e284799": {
+      "assessmentId": "risk-eval-ee889a0a-5390-4267-a128-2dcc8e284799",
+      "vpa": "kirana.store@okhdfcbank",
+      "amount": 450,
+      "riskScore": 0,
+      "riskLevel": "SAFE",
+      "recommendedAction": "ALLOW",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "✅ Safe Risk Score (0/100): Transaction passes pre-flight safety checks.",
+        "bulletPoints": [
+          {
+            "severity": "LOW",
+            "code": "VERIFIED_CLEAN",
+            "title": "Clean Transaction Profile",
+            "description": "Recipient VPA and device interaction patterns show normal, safe behavior."
+          }
+        ],
+        "contrastiveReasons": [],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:12:50.042Z"
+    },
+    "risk-eval-832f4ecd-f7bb-4b83-a465-7de2016c5779": {
+      "assessmentId": "risk-eval-832f4ecd-f7bb-4b83-a465-7de2016c5779",
+      "vpa": "officer.verify@okicici",
+      "amount": 25000,
+      "riskScore": 98,
+      "riskLevel": "HIGH_RISK",
+      "recommendedAction": "WARN_WITH_CONFIRMATION",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": true,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 65
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (98/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "COERCIVE_MESSAGE_PATTERN",
+            "title": "Extortion / Impersonation In Message",
+            "description": "Payment message contains high-risk police impersonation / extortion indicators: \"arrest, penalty, deposit, cbi, do not disconnect, verification\""
+          },
+          {
+            "severity": "MEDIUM",
+            "code": "USER_THRESHOLD_EXCEEDED",
+            "title": "Safety Limit Exceeded",
+            "description": "Amount (₹25000) exceeds your configured safety threshold of ₹15000."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:12:51.998Z"
+    },
+    "risk-eval-58424d8c-6c32-462e-a8d8-69370de7a512": {
+      "assessmentId": "risk-eval-58424d8c-6c32-462e-a8d8-69370de7a512",
+      "vpa": "scammer.cybercell@oksbi",
+      "amount": 15000,
+      "riskScore": 98,
+      "riskLevel": "CRITICAL_BLOCKED",
+      "recommendedAction": "RESTRICT_BLOCK",
+      "isBlocked": true,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 98,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (98/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "KNOWN_SCAMMER_MATCH",
+            "title": "Known Scammer Record Found",
+            "description": "This recipient (scammer.cybercell@oksbi) has been reported 142 times in national cybercrime databases."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": false,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": {
+        "id": "threat-vpa-001",
+        "type": "VPA",
+        "identifier": "scammer.cybercell@oksbi",
+        "name": "Fake Cyber Police Verification",
+        "category": "DIGITAL_ARREST",
+        "riskScore": 98,
+        "isBlacklisted": true,
+        "source": "I4C_NATIONAL_CYBER_CRIME_PORTAL",
+        "reportCount": 142,
+        "details": "Impersonates Delhi Police / CBI requesting urgent security clearance fee.",
+        "tags": [
+          "digital_arrest",
+          "fake_police",
+          "cbi_impersonation"
+        ],
+        "reportedAt": "2026-08-10T10:30:00.000Z"
+      },
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:13:32.819Z"
+    },
+    "risk-eval-7276d5ec-8b97-4479-999e-57bf3cb54dac": {
+      "assessmentId": "risk-eval-7276d5ec-8b97-4479-999e-57bf3cb54dac",
+      "vpa": "kirana.store@okhdfcbank",
+      "amount": 450,
+      "riskScore": 0,
+      "riskLevel": "SAFE",
+      "recommendedAction": "ALLOW",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "✅ Safe Risk Score (0/100): Transaction passes pre-flight safety checks.",
+        "bulletPoints": [
+          {
+            "severity": "LOW",
+            "code": "VERIFIED_CLEAN",
+            "title": "Clean Transaction Profile",
+            "description": "Recipient VPA and device interaction patterns show normal, safe behavior."
+          }
+        ],
+        "contrastiveReasons": [],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:13:33.399Z"
+    },
+    "risk-eval-44dfd7da-9e85-4fa5-b94d-710c5eb02410": {
+      "assessmentId": "risk-eval-44dfd7da-9e85-4fa5-b94d-710c5eb02410",
+      "vpa": "officer.verify@okicici",
+      "amount": 25000,
+      "riskScore": 98,
+      "riskLevel": "HIGH_RISK",
+      "recommendedAction": "WARN_WITH_CONFIRMATION",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": true,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 65
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (98/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "COERCIVE_MESSAGE_PATTERN",
+            "title": "Extortion / Impersonation In Message",
+            "description": "Payment message contains high-risk police impersonation / extortion indicators: \"arrest, penalty, deposit, cbi, do not disconnect, verification\""
+          },
+          {
+            "severity": "MEDIUM",
+            "code": "USER_THRESHOLD_EXCEEDED",
+            "title": "Safety Limit Exceeded",
+            "description": "Amount (₹25000) exceeds your configured safety threshold of ₹15000."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:13:35.276Z"
+    },
+    "risk-eval-4328b64d-a379-4936-bf7e-8845cf6dc814": {
+      "assessmentId": "risk-eval-4328b64d-a379-4936-bf7e-8845cf6dc814",
+      "vpa": "scammer.cybercell@oksbi",
+      "amount": 15000,
+      "riskScore": 98,
+      "riskLevel": "CRITICAL_BLOCKED",
+      "recommendedAction": "RESTRICT_BLOCK",
+      "isBlocked": true,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 98,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (98/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "KNOWN_SCAMMER_MATCH",
+            "title": "Known Scammer Record Found",
+            "description": "This recipient (scammer.cybercell@oksbi) has been reported 142 times in national cybercrime databases."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": false,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": {
+        "id": "threat-vpa-001",
+        "type": "VPA",
+        "identifier": "scammer.cybercell@oksbi",
+        "name": "Fake Cyber Police Verification",
+        "category": "DIGITAL_ARREST",
+        "riskScore": 98,
+        "isBlacklisted": true,
+        "source": "I4C_NATIONAL_CYBER_CRIME_PORTAL",
+        "reportCount": 142,
+        "details": "Impersonates Delhi Police / CBI requesting urgent security clearance fee.",
+        "tags": [
+          "digital_arrest",
+          "fake_police",
+          "cbi_impersonation"
+        ],
+        "reportedAt": "2026-08-10T10:30:00.000Z"
+      },
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:14:00.827Z"
+    },
+    "risk-eval-c11a1585-c52e-4b49-ba07-74b07904a0d1": {
+      "assessmentId": "risk-eval-c11a1585-c52e-4b49-ba07-74b07904a0d1",
+      "vpa": "kirana.store@okhdfcbank",
+      "amount": 450,
+      "riskScore": 0,
+      "riskLevel": "SAFE",
+      "recommendedAction": "ALLOW",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": false,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 0
+      },
+      "explanation": {
+        "summary": "✅ Safe Risk Score (0/100): Transaction passes pre-flight safety checks.",
+        "bulletPoints": [
+          {
+            "severity": "LOW",
+            "code": "VERIFIED_CLEAN",
+            "title": "Clean Transaction Profile",
+            "description": "Recipient VPA and device interaction patterns show normal, safe behavior."
+          }
+        ],
+        "contrastiveReasons": [],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:14:01.266Z"
+    },
+    "risk-eval-f4d8101c-452b-4c05-951b-68b39b2d5b39": {
+      "assessmentId": "risk-eval-f4d8101c-452b-4c05-951b-68b39b2d5b39",
+      "vpa": "officer.verify@okicici",
+      "amount": 25000,
+      "riskScore": 98,
+      "riskLevel": "HIGH_RISK",
+      "recommendedAction": "WARN_WITH_CONFIRMATION",
+      "isBlocked": false,
+      "requiresBiometricConfirmation": true,
+      "factorBreakdown": {
+        "vpaRisk": 10,
+        "coercionRisk": 0,
+        "deviceRisk": 0,
+        "amountRisk": 65
+      },
+      "explanation": {
+        "summary": "⚠️ High Risk Score (98/100): Fraud patterns detected. Verify recipient authenticity.",
+        "bulletPoints": [
+          {
+            "severity": "CRITICAL",
+            "code": "COERCIVE_MESSAGE_PATTERN",
+            "title": "Extortion / Impersonation In Message",
+            "description": "Payment message contains high-risk police impersonation / extortion indicators: \"arrest, penalty, deposit, cbi, do not disconnect, verification\""
+          },
+          {
+            "severity": "MEDIUM",
+            "code": "USER_THRESHOLD_EXCEEDED",
+            "title": "Safety Limit Exceeded",
+            "description": "Amount (₹25000) exceeds your configured safety threshold of ₹15000."
+          }
+        ],
+        "contrastiveReasons": [
+          "This alert is triggered primarily by the recipient VPA risk rating and coercive context, not just transaction volume."
+        ],
+        "userGuidance": {
+          "canBypassWithConfirmation": true,
+          "overrideDisclaimer": "If this is a known, legitimate urgent payment, you can proceed by entering your biometric confirmation."
+        }
+      },
+      "threatDetails": null,
+      "deviceContext": {
+        "isOnActiveCall": false,
+        "activeCallerNumber": null,
+        "screenSharingActive": false
+      },
+      "timestamp": "2026-08-30T14:14:02.917Z"
     }
   },
   "callReports": {
@@ -693,7 +1438,99 @@
       "reviewerNotes": "Verified genuine emergency. Cleared by Senior Officer #042",
       "resolvedAt": "2026-08-24T12:33:25.391Z",
       "resolvedBy": "BANK_OFFICER_042"
+    },
+    "VRX-REV-326606": {
+      "appealId": "VRX-REV-326606",
+      "assessmentId": null,
+      "vpa": "honest.merchant@okhdfcbank",
+      "amount": 5000,
+      "note": "",
+      "appellantType": "CONSUMER",
+      "contactEmail": "user@example.com",
+      "reason": "Legitimate grocery vendor wrongly blocked",
+      "evidenceDescription": "",
+      "status": "PENDING_REVIEW",
+      "submittedAt": "2026-08-30T14:07:58.763Z",
+      "reviewerNotes": null,
+      "resolvedAt": null
+    },
+    "VRX-REV-250488": {
+      "appealId": "VRX-REV-250488",
+      "assessmentId": null,
+      "vpa": "honest.merchant@okhdfcbank",
+      "amount": 5000,
+      "note": "",
+      "appellantType": "CONSUMER",
+      "contactEmail": "user@example.com",
+      "reason": "Legitimate grocery vendor wrongly blocked",
+      "evidenceDescription": "",
+      "status": "PENDING_REVIEW",
+      "submittedAt": "2026-08-30T14:09:24.867Z",
+      "reviewerNotes": null,
+      "resolvedAt": null
+    },
+    "VRX-REV-151727": {
+      "appealId": "VRX-REV-151727",
+      "assessmentId": null,
+      "vpa": "honest.merchant@okhdfcbank",
+      "amount": 5000,
+      "note": "",
+      "appellantType": "CONSUMER",
+      "contactEmail": "user@example.com",
+      "reason": "Legitimate grocery vendor wrongly blocked",
+      "evidenceDescription": "",
+      "status": "PENDING_REVIEW",
+      "submittedAt": "2026-08-30T14:11:48.500Z",
+      "reviewerNotes": null,
+      "resolvedAt": null
+    },
+    "VRX-REV-144115": {
+      "appealId": "VRX-REV-144115",
+      "assessmentId": null,
+      "vpa": "honest.merchant@okhdfcbank",
+      "amount": 5000,
+      "note": "",
+      "appellantType": "CONSUMER",
+      "contactEmail": "user@example.com",
+      "reason": "Legitimate grocery vendor wrongly blocked",
+      "evidenceDescription": "",
+      "status": "PENDING_REVIEW",
+      "submittedAt": "2026-08-30T14:12:54.306Z",
+      "reviewerNotes": null,
+      "resolvedAt": null
+    },
+    "VRX-REV-840245": {
+      "appealId": "VRX-REV-840245",
+      "assessmentId": null,
+      "vpa": "honest.merchant@okhdfcbank",
+      "amount": 5000,
+      "note": "",
+      "appellantType": "CONSUMER",
+      "contactEmail": "user@example.com",
+      "reason": "Legitimate grocery vendor wrongly blocked",
+      "evidenceDescription": "",
+      "status": "APPROVED_WHITELISTED",
+      "submittedAt": "2026-08-30T14:13:37.409Z",
+      "reviewerNotes": "Reviewed and APPROVED_WHITELISTED by Officer BANK_OFFICER_042",
+      "resolvedAt": "2026-08-30T14:13:37.415Z",
+      "resolvedBy": "BANK_OFFICER_042"
+    },
+    "VRX-REV-184424": {
+      "appealId": "VRX-REV-184424",
+      "assessmentId": null,
+      "vpa": "honest.merchant@okhdfcbank",
+      "amount": 5000,
+      "note": "",
+      "appellantType": "CONSUMER",
+      "contactEmail": "user@example.com",
+      "reason": "Legitimate grocery vendor wrongly blocked",
+      "evidenceDescription": "",
+      "status": "APPROVED_WHITELISTED",
+      "submittedAt": "2026-08-30T14:14:05.279Z",
+      "reviewerNotes": "Reviewed and APPROVED_WHITELISTED by Officer BANK_OFFICER_042",
+      "resolvedAt": "2026-08-30T14:14:05.283Z",
+      "resolvedBy": "BANK_OFFICER_042"
     }
   },
-  "lastSaved": "2026-08-29T23:13:20.425Z"
+  "lastSaved": "2026-08-30T14:14:05.283Z"
 }

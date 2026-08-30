@@ -87,10 +87,12 @@ export class InstitutionController {
       const { appealId } = req.params;
       const { resolution, reviewerNotes, officerId = 'BANK_OFFICER_042' } = req.body;
 
-      if (!['APPROVED_WHITELISTED', 'REJECTED'].includes(resolution)) {
+      const normalizedResolution = resolution === 'WHITELISTED' || resolution === 'APPROVED' ? 'APPROVED_WHITELISTED' : resolution;
+
+      if (!['APPROVED_WHITELISTED', 'REJECTED', 'APPROVED'].includes(normalizedResolution)) {
         return res.status(400).json({
           success: false,
-          message: 'Resolution must be either APPROVED_WHITELISTED or REJECTED.'
+          message: 'Resolution must be either APPROVED_WHITELISTED (or WHITELISTED) or REJECTED.'
         });
       }
 
@@ -99,13 +101,13 @@ export class InstitutionController {
         return res.status(404).json({ success: false, message: 'Appeal ticket not found.' });
       }
 
-      appeal.status = resolution;
-      appeal.reviewerNotes = reviewerNotes || `Reviewed and ${resolution} by Officer ${officerId}`;
+      appeal.status = normalizedResolution;
+      appeal.reviewerNotes = reviewerNotes || `Reviewed and ${normalizedResolution} by Officer ${officerId}`;
       appeal.resolvedBy = officerId;
       appeal.resolvedAt = new Date().toISOString();
 
       // If approved, un-blacklist the VPA in threat DB
-      if (resolution === 'APPROVED_WHITELISTED' && appeal.vpa) {
+      if (normalizedResolution === 'APPROVED_WHITELISTED' && appeal.vpa) {
         const record = db.threatRegistry.get(appeal.vpa.toLowerCase());
         if (record) {
           record.isBlacklisted = false;
