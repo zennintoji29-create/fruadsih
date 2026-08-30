@@ -408,10 +408,47 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
           placeholder={t.targetCallerPlaceholder || 'e.g. +91 94775 30475 (Auto-saves to Threat DB if flagged)'}
           className="w-full bg-black/40 border border-white/15 rounded-xl px-3.5 py-2.5 text-[12px] text-white font-mono placeholder:text-white/25 focus:outline-none focus:border-[#D8F828]"
         />
+
+        {/* Dedicated Submit & Run AI Threat Analysis Button */}
+        <button
+          onClick={() => {
+            analyzeAudioPayload({
+              audioFileName: 'manual_submission.webm',
+              durationSeconds: 30,
+              fallbackTranscript: liveSpeechText || (callerNumberInput ? `Call from suspect number ${callerNumberInput}. Checking cyber crime blacklist.` : presets[selectedPreset].transcript),
+              callerNumber: callerNumberInput || presets[selectedPreset].caller
+            });
+          }}
+          disabled={loading}
+          className="w-full py-3 px-4 rounded-[16px] text-[12px] font-black flex items-center justify-center gap-2 uppercase tracking-wider active:scale-[0.97] transition-all cursor-pointer shadow-md disabled:opacity-50"
+          style={{ background: 'linear-gradient(135deg,#E4FF2E 0%,#C4E810 60%,#A8CC18 100%)', color: '#1A0317', fontFamily: 'Outfit, sans-serif' }}
+        >
+          <Sparkles className="w-4 h-4 text-[#1A0317] stroke-[2.8]" />
+          {loading ? 'Analyzing with Groq AI...' : 'Submit & Run AI Threat Analysis'}
+        </button>
       </div>
 
       {/* Live Mic Recorder Card */}
       <div className="rounded-[24px] p-5 text-center space-y-3.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
+        
+        {/* Rectangular Transcribe Word Indicator Screen directly above Record Button */}
+        <div className="rounded-[18px] p-3 text-left space-y-1.5 border border-white/10" style={{ background: 'rgba(0,0,0,0.65)' }}>
+          <div className="flex items-center justify-between">
+            <span className="text-[9.5px] font-bold uppercase tracking-wider font-mono flex items-center gap-1.5" style={{ color: recordingLive ? '#F87396' : '#D8F828' }}>
+              <Radio className={`w-3.5 h-3.5 ${recordingLive ? 'animate-pulse text-rose-400' : 'text-[#D8F828]'}`} />
+              {recordingLive ? '🔴 LIVE SPEECH TRANSCRIBING...' : '📟 SPEECH TRANSCRIBER DISPLAY'}
+            </span>
+            <span className="text-[8.5px] font-mono text-white/40">
+              {liveSpeechText ? `${liveSpeechText.split(' ').filter(Boolean).length} WORDS CAPTURED` : 'IDLE / READY'}
+            </span>
+          </div>
+          <div className="min-h-[50px] max-h-[85px] overflow-y-auto rounded-xl bg-black/50 p-2.5 border border-white/5">
+            <p className="text-[11.5px] font-mono leading-snug text-white/90">
+              {liveSpeechText || (recordingLive ? 'Listening to voice stream in real time...' : 'Speak into microphone or enter transcript. Words will stream here dynamically.')}
+            </p>
+          </div>
+        </div>
+
         <div
           className="w-16 h-16 rounded-[22px] mx-auto flex items-center justify-center transition-all cursor-pointer"
           onClick={recordingLive ? stopRealAudioRecording : startRealAudioRecording}
@@ -432,22 +469,10 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
           </p>
         </div>
 
-        {/* Live Speech Recognition Captions Preview */}
-        {recordingLive && liveSpeechText && (
-          <div className="p-3 rounded-xl bg-black/50 border border-white/10 text-left animate-pulse">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#D8F828] font-mono block mb-1">
-              Live Speech Detected:
-            </span>
-            <p className="text-xs text-white/90 italic font-mono">
-              "{liveSpeechText}"
-            </p>
-          </div>
-        )}
-
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button
             onClick={recordingLive ? stopRealAudioRecording : startRealAudioRecording}
-            className="py-3 px-3 rounded-[16px] text-[11.5px] font-black flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] uppercase tracking-wider"
+            className="py-3 px-3 rounded-[16px] text-[11.5px] font-black flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] uppercase tracking-wider cursor-pointer"
             style={recordingLive
               ? { background: 'linear-gradient(135deg,#E8546B,#C92040)', color: 'white', fontFamily: 'Outfit, sans-serif' }
               : { background: 'linear-gradient(135deg,#E4FF2E,#C4E810)', color: '#1A0317', fontFamily: 'Outfit, sans-serif' }
@@ -466,7 +491,7 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="py-3 px-3 rounded-[16px] text-[11.5px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] bg-white/10 text-white border border-white/15 hover:bg-white/15"
+            className="py-3 px-3 rounded-[16px] text-[11.5px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] bg-white/10 text-white border border-white/15 hover:bg-white/15 cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5 text-cyan-400" /> {t.uploadAudioFile ? t.uploadAudioFile.split('(')[0].trim() : 'Upload Audio'}
           </button>

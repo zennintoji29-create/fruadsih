@@ -12,6 +12,10 @@ export default function SettingsScreen({ onBack, user, onUpdateUser, onLogout, c
 
   const [maxAmountLimit, setMaxAmountLimit] = useState(user?.settings?.maxAmountLimit || 10000);
   const [voicePhishingMode, setVoicePhishingMode] = useState(user?.settings?.voicePhishingMode !== false);
+  const [callScreeningEnabled, setCallScreeningEnabled] = useState(user?.settings?.callScreeningEnabled !== false);
+  const [biometricEnabled, setBiometricEnabled] = useState(() => {
+    return localStorage.getItem('shieldx_biometric_enabled') === 'true';
+  });
   const [seniorCitizenMode, setSeniorCitizenMode] = useState(() => {
     return localStorage.getItem('verix_senior_citizen_mode') === 'true';
   });
