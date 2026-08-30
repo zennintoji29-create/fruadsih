@@ -261,14 +261,16 @@ async function ingestDatasets() {
   existingStore.threatRegistry = allThreatRecords;
   fs.writeFileSync(OUTPUT_JSON, JSON.stringify(existingStore, null, 2), 'utf8');
 
-  // ── 6. Export seeds/threatData.js ──
+  // ── 6. Export seeds/threatData.js for Backend and Frontend ──
+  const FRONTEND_THREAT_JS = path.resolve(__dirname, '../../frontend/src/threatData.js');
+
   const threatJsCode = `/**
  * Verix National Cybercrime Threat Intelligence Registry
  * Auto-Ingested & Enriched from Real Indian Cyber Fraud Datasets (2026)
  * Total Ingested Threat Entities: ${allThreatRecords.length}
  */
 
-export const SEED_THREAT_RECORDS = ${JSON.stringify(allThreatRecords.slice(0, 300), null, 2)};
+export const SEED_THREAT_RECORDS = ${JSON.stringify(allThreatRecords, null, 2)};
 export const INITIAL_THREAT_RECORDS = SEED_THREAT_RECORDS;
 
 export const SEED_DEFAULT_USER = {
@@ -293,6 +295,7 @@ export const SEED_DEFAULT_USER = {
 };
 `;
   fs.writeFileSync(THREAT_DATA_JS, threatJsCode, 'utf8');
+  fs.writeFileSync(FRONTEND_THREAT_JS, threatJsCode, 'utf8');
 
   console.log('\n═══════════════════════════════════════════════════════════════');
   console.log(`🎉 INGESTION COMPLETE!`);

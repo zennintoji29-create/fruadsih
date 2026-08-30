@@ -5,8 +5,10 @@ import {
   Sparkles, Lock, ArrowUpRight, Clock, User, Phone, Check, AlertOctagon, 
   Terminal, MapPin, Mail, Key, Landmark, ArrowRight, LogOut, Shield,
   Radio, BellRing, FileAudio, Upload, Mic, Play, Square, FileText, ChevronRight,
-  ExternalLink, Eye, PlusCircle, AlertCircle, History, Trash2, Archive, RotateCcw
+  ExternalLink, Eye, PlusCircle, AlertCircle, History, Trash2, Archive, RotateCcw,
+  Download, Copy, ChevronLeft, ChevronsLeft, ChevronsRight, X, Layers
 } from 'lucide-react';
+import { INITIAL_THREAT_RECORDS } from '../threatData.js';
 
 export default function BankPortal({ backendUrl }) {
   // Portal Flow Step: 'LOGIN' | 'STATION_SETUP' | 'CONSOLE'
@@ -51,12 +53,60 @@ export default function BankPortal({ backendUrl }) {
   const [activeTab, setActiveTab] = useState('disputes');
   const [appeals, setAppeals] = useState([]);
   const [stats, setStats] = useState(null);
-  const [threats, setThreats] = useState([]);
+  const [threats, setThreats] = useState(() => {
+    return Array.isArray(INITIAL_THREAT_RECORDS) && INITIAL_THREAT_RECORDS.length > 0
+      ? INITIAL_THREAT_RECORDS
+      : [];
+  });
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('ALL'); // 'ALL' | 'PENDING' | 'RESOLVED'
   const [selectedThreatType, setSelectedThreatType] = useState('ALL'); // 'ALL' | 'VPA' | 'PHONE'
+  const [threatCategoryFilter, setThreatCategoryFilter] = useState('ALL');
+  const [threatPage, setThreatPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [copiedIdentifier, setCopiedIdentifier] = useState('');
+
+  const handleCopyIdentifier = (val) => {
+    if (!val) return;
+    try {
+      navigator.clipboard.writeText(val);
+      setCopiedIdentifier(val);
+      setTimeout(() => setCopiedIdentifier(''), 2000);
+    } catch (e) {}
+  };
+
+  const handleExportThreatsCsv = () => {
+    if (!threats || threats.length === 0) {
+      alert('No records available to export.');
+      return;
+    }
+    const headers = ['ID', 'Identifier', 'Type', 'Category', 'Risk Score', 'Is Blacklisted', 'Source', 'Report Count', 'Forensic Details', 'Reported At'];
+    const rows = filteredThreats.map(t => [
+      `"${t.id || ''}"`,
+      `"${t.identifier || ''}"`,
+      `"${t.type || ''}"`,
+      `"${t.category || ''}"`,
+      t.riskScore || 90,
+      t.isBlacklisted ? 'TRUE' : 'FALSE',
+      `"${t.source || ''}"`,
+      t.reportCount || 1,
+      `"${(t.details || '').replace(/"/g, '""')}"`,
+      `"${t.reportedAt || ''}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `verix_threat_intelligence_database_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setActionSuccess(`✓ Exported ${filteredThreats.length} threat intelligence records to CSV.`);
+    setTimeout(() => setActionSuccess(''), 4000);
+  };
 
   // Cleared / Archived Ticket IDs (persisted locally so cleared resolved tickets stay out of active queue)
   const [clearedTicketIds, setClearedTicketIds] = useState(() => {
@@ -406,16 +456,43 @@ export default function BankPortal({ backendUrl }) {
 
   // Filters for Threat Registry (Req 3)
   const filteredThreats = threats.filter(t => {
-    const matchesSearch = 
-      (t.identifier && t.identifier.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (t.category && t.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (t.details && t.details.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (!t) return false;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q ||
+      (t.identifier && t.identifier.toLowerCase().includes(q)) ||
+      (t.name && t.name.toLowerCase().includes(q)) ||
+      (t.category && t.category.toLowerCase().includes(q)) ||
+      (t.source && t.source.toLowerCase().includes(q)) ||
+      (t.details && t.details.toLowerCase().includes(q)) ||
+      (Array.isArray(t.tags) && t.tags.some(tag => tag.toLowerCase().includes(q)));
 
     if (!matchesSearch) return false;
-    if (selectedThreatType === 'VPA') return t.type === 'VPA' || t.identifier?.includes('@');
-    if (selectedThreatType === 'PHONE') return t.type === 'PHONE' || !t.identifier?.includes('@');
+    
+    const isVpa = t.type === 'VPA' || t.identifier?.includes('@');
+    if (selectedThreatType === 'VPA' && !isVpa) return false;
+    if (selectedThreatType === 'PHONE' && isVpa) return false;
+
+    if (threatCategoryFilter !== 'ALL') {
+      const cat = (t.category || '').toUpperCase();
+      if (threatCategoryFilter === 'DIGITAL_ARREST' && !cat.includes('DIGITAL_ARREST') && !cat.includes('POLICE')) return false;
+      if (threatCategoryFilter === 'ELECTRICITY' && !cat.includes('ELECTRICITY') && !cat.includes('UTILITY')) return false;
+      if (threatCategoryFilter === 'KYC' && !cat.includes('KYC') && !cat.includes('ANYDESK') && !cat.includes('APK')) return false;
+      if (threatCategoryFilter === 'MULE' && !cat.includes('MULE') && !cat.includes('POS') && !cat.includes('IDENTITY')) return false;
+      if (threatCategoryFilter === 'VOICE' && !cat.includes('VOICE') && !cat.includes('CALL')) return false;
+    }
+
     return true;
   });
+
+  const totalThreatPages = Math.ceil(filteredThreats.length / (itemsPerPage === 'ALL' ? (filteredThreats.length || 1) : Number(itemsPerPage))) || 1;
+  const currentThreatPage = Math.min(threatPage, totalThreatPages);
+  const paginatedThreats = itemsPerPage === 'ALL' 
+    ? filteredThreats 
+    : filteredThreats.slice((currentThreatPage - 1) * Number(itemsPerPage), currentThreatPage * Number(itemsPerPage));
+
+  const totalVpaCount = threats.filter(t => t.type === 'VPA' || t.identifier?.includes('@')).length;
+  const totalPhoneCount = threats.filter(t => t.type === 'PHONE' || !t.identifier?.includes('@')).length;
+  const criticalThreatCount = threats.filter(t => (t.riskScore || 0) >= 90).length;
 
   const pendingCount = activeAppeals.filter(a => a.status === 'PENDING_REVIEW').length;
   const activeResolvedCount = activeAppeals.filter(a => a.status !== 'PENDING_REVIEW').length;
@@ -570,7 +647,7 @@ export default function BankPortal({ backendUrl }) {
   // VIEW 3: STEP 3 — MAIN WORK CONSOLE WITH LEFT SIDEBAR (Req 6)
   // ══════════════════════════════════════════════════════════════
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6 text-[#F0F3F6] font-sans selection:bg-[#00F0A0] selection:text-[#090C10] animate-fade-in">
+    <div className="w-full max-w-[1920px] mx-auto p-3 sm:p-5 lg:p-6 space-y-5 text-[#F0F3F6] font-sans selection:bg-[#00F0A0] selection:text-[#090C10] animate-fade-in">
       
       {/* ── TOP HEADER COMMAND BAR ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#10141C] border border-white/[0.08] shadow-xl">
@@ -607,7 +684,7 @@ export default function BankPortal({ backendUrl }) {
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#171E2B] hover:bg-[#1E2636] border border-white/[0.1] text-xs font-mono font-semibold text-[#BAC5D5] transition-all active:scale-95 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-[#00F0A0] ${loading ? 'animate-spin' : ''}`} />
-            <span>Sync DB</span>
+            <span>Sync Cloud DB</span>
           </button>
           <button
             onClick={() => setCurrentStep('STATION_SETUP')}
@@ -633,12 +710,12 @@ export default function BankPortal({ backendUrl }) {
         </div>
       )}
 
-      {/* ── MAIN WORKSPACE GRID WITH LEFT SIDEBAR (Req 6) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* ── MAIN WORKSPACE GRID WITH SHIFTED LEFT SIDEBAR ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
-        {/* LEFT SIDEBAR NAVIGATION (Req 6) */}
-        <div className="lg:col-span-3 space-y-2">
-          <div className="p-4 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-1.5 shadow-md">
+        {/* LEFT SIDEBAR NAVIGATION (Shifted to Far Left) */}
+        <div className="lg:col-span-3 xl:col-span-2 space-y-3">
+          <div className="p-3.5 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-1.5 shadow-md sticky top-4">
             <span className="text-[10px] font-mono font-bold uppercase text-[#546274] px-2 block mb-2 tracking-wider">
               Control Modules
             </span>
@@ -646,66 +723,67 @@ export default function BankPortal({ backendUrl }) {
             {[
               { id: 'disputes', label: 'Disputes & Appeals', icon: FileText, count: pendingCount > 0 ? `${pendingCount} Pending` : activeAppeals.length, badgeColor: pendingCount > 0 ? 'bg-amber-400/25 text-amber-300 border border-amber-400/30' : 'bg-white/10 text-white/70' },
               { id: 'history', label: 'Disputes History', icon: History, count: totalResolvedHistoryCount, badgeColor: 'bg-emerald-400/20 text-emerald-300' },
-              { id: 'database_search', label: 'Database Search', icon: Database, count: threats.length, badgeColor: 'bg-cyan-400/20 text-cyan-300' },
+              { id: 'database_search', label: 'Database Search', icon: Database, count: threats.length.toLocaleString(), badgeColor: 'bg-cyan-400/25 text-cyan-300 font-bold border border-cyan-400/30' },
               { id: 'audio_lab', label: 'Voice Phishing Lab', icon: Mic, count: 'AI', badgeColor: 'bg-purple-400/20 text-purple-300' },
-              { id: 'sim_carrier', label: 'SIM Swap Monitor', icon: Radio, count: simImsiLog.length, badgeColor: 'bg-emerald-400/20 text-emerald-300' },
-              { id: 'advisories', label: 'Security Advisories', icon: BellRing, count: '5', badgeColor: 'bg-rose-400/20 text-rose-300' }
-            ].map(item => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full p-3 rounded-xl text-left text-xs font-mono font-bold flex items-center justify-between transition-all cursor-pointer ${
-                    isActive 
-                      ? 'bg-[#171E2B] text-[#00F0A0] border border-[#00F0A0]/30 shadow-sm' 
-                      : 'text-[#8494A8] hover:text-white hover:bg-white/[0.03]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#00F0A0]' : 'text-[#546274]'}`} />
-                    <span>{item.label}</span>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${item.badgeColor}`}>
-                    {item.count}
+              { id: 'sim_carrier', label: 'SIM Swap Monitor', icon: Radio, count: 'IMSI', badgeColor: 'bg-rose-400/20 text-rose-300' },
+              { id: 'advisories', label: 'Security Advisories', icon: BellRing, count: '5', badgeColor: 'bg-blue-400/20 text-blue-300' }
+            ].map(({ id, label, icon: Icon, count, badgeColor }) => (
+              <button
+                key={id}
+                onClick={() => {
+                  setActiveTab(id);
+                  if (id === 'database_search') setThreatPage(1);
+                }}
+                className={`w-full flex items-center justify-between p-3 rounded-xl text-xs font-mono transition-all cursor-pointer ${
+                  activeTab === id
+                    ? 'bg-[#00F0A0]/15 text-[#00F0A0] font-bold border border-[#00F0A0]/30 shadow-sm'
+                    : 'text-[#8494A8] hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon className={`w-4 h-4 ${activeTab === id ? 'text-[#00F0A0]' : 'text-[#8494A8]'}`} />
+                  <span>{label}</span>
+                </div>
+                {count !== undefined && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] ${badgeColor}`}>
+                    {count}
                   </span>
-                </button>
-              );
-            })}
-          </div>
+                )}
+              </button>
+            ))}
 
-          {/* Quick Stats Widget */}
-          <div className="p-4 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-3">
-            <span className="text-[10px] font-mono font-bold uppercase text-[#546274] block tracking-wider">
-              Real-Time Telemetry
-            </span>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-[#8494A8]">Blacklisted VPAs:</span>
-                <span className="text-white font-bold">{threats.filter(t => t.type === 'VPA' || t.identifier?.includes('@')).length}</span>
-              </div>
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-[#8494A8]">Blacklisted Numbers:</span>
-                <span className="text-white font-bold">{threats.filter(t => t.type === 'PHONE' || !t.identifier?.includes('@')).length}</span>
-              </div>
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-[#8494A8]">Pending Disputes:</span>
-                <span className="text-amber-400 font-bold">{pendingCount}</span>
-              </div>
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-[#8494A8]">Archived History:</span>
-                <span className="text-emerald-400 font-bold">{totalResolvedHistoryCount}</span>
+            {/* Quick Live Telemetry Widget */}
+            <div className="pt-3 mt-3 border-t border-white/[0.06] space-y-2">
+              <span className="text-[9.5px] font-mono uppercase text-[#546274] px-2 block font-bold tracking-wider">
+                Registry Telemetry
+              </span>
+              <div className="bg-[#090C10] p-2.5 rounded-xl border border-white/[0.04] space-y-1.5 text-[10.5px] font-mono text-[#8494A8]">
+                <div className="flex justify-between">
+                  <span>Total Threats:</span>
+                  <span className="text-white font-bold">{threats.length.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Phone Numbers:</span>
+                  <span className="text-purple-300 font-bold">{totalPhoneCount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Blacklisted VPAs:</span>
+                  <span className="text-cyan-300 font-bold">{totalVpaCount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Critical (&ge;90%):</span>
+                  <span className="text-rose-400 font-bold">{criticalThreatCount.toLocaleString()}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT MAIN PANEL */}
-        <div className="lg:col-span-9 space-y-4">
+        {/* RIGHT / MAIN CONTENT AREA (Massive Widescreen Layout) */}
+        <div className="lg:col-span-9 xl:col-span-10 space-y-4">
 
           {/* ══════════════════════════════════════════════════════════
-              TAB 1: DISPUTES & APPEALS ACTIVE QUEUE
+              TAB 1: DISPUTES & APPEALS (Active Queue)
           ══════════════════════════════════════════════════════════ */}
           {activeTab === 'disputes' && (
             <div className="p-5 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-4 shadow-xl">
@@ -713,106 +791,65 @@ export default function BankPortal({ backendUrl }) {
                 <div>
                   <h2 className="text-sm font-bold text-white font-mono flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[#00F0A0]" />
-                    Live Dispute Appeals Queue
+                    False-Positive Transaction Appeals Queue
                   </h2>
-                  <p className="text-[11px] text-[#738294] font-mono mt-0.5">Click any ticket for full user explanation and 1-click clearance.</p>
+                  <p className="text-[11px] text-[#738294] font-mono mt-0.5">
+                    Live review desk for users appealing blocked genuine payments.
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {activeResolvedCount > 0 && (
+                    <button
+                      onClick={handleClearResolvedTickets}
+                      className="px-3 py-1.5 rounded-xl bg-[#171E2B] hover:bg-rose-500/15 border border-white/[0.1] hover:border-rose-500/30 text-rose-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                      title="Clear all completed/resolved tickets from active queue"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Clear Completed ({activeResolvedCount})</span>
+                    </button>
+                  )}
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-[#546274] absolute left-3 top-2.5" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search active tickets..."
-                      className="bg-[#090C10] border border-white/[0.09] rounded-xl py-1.5 pl-8 pr-3 text-xs font-mono text-white placeholder:text-[#546274] focus:outline-none focus:border-[#00F0A0]/50"
+                      placeholder="Search ticket ID or VPA..."
+                      className="bg-[#090C10] border border-white/[0.09] rounded-xl py-1.5 pl-8 pr-3 text-xs font-mono text-white placeholder:text-[#546274] focus:outline-none focus:border-[#00F0A0]/50 w-52"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Filter Pills + Clear Resolved Button */}
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  {[
-                    { id: 'ALL', label: `Active Queue (${activeAppeals.length})` },
-                    { id: 'PENDING', label: `Pending Review (${pendingCount})` },
-                    { id: 'RESOLVED', label: `Resolved (${activeResolvedCount})` }
-                  ].map(f => (
-                    <button
-                      key={f.id}
-                      onClick={() => setSelectedFilter(f.id)}
-                      className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                        selectedFilter === f.id
-                          ? 'bg-[#00F0A0]/15 text-[#00F0A0] font-bold border border-[#00F0A0]/30'
-                          : 'bg-[#090C10] text-[#8494A8] border border-white/[0.05] hover:text-white'
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Clear Completed / Resolved Button */}
-                {activeResolvedCount > 0 && (
-                  <button
-                    onClick={handleClearResolved}
-                    className="px-3.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-sm"
-                    title="Clear completed/resolved tickets and keep only pending ones"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Clear Completed ({activeResolvedCount})</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Tickets List */}
+              {/* Active Appeals List */}
               <div className="space-y-3">
                 {filteredAppeals.length === 0 ? (
-                  <div className="p-12 text-center rounded-2xl bg-[#090C10] border border-white/[0.05] space-y-2">
-                    <CheckCircle2 className="w-8 h-8 text-[#00F0A0] mx-auto opacity-70" />
-                    <p className="text-sm font-bold text-white">No Active Pending Tickets</p>
-                    <p className="text-xs text-[#738294]">
-                      {clearedTicketIds.length > 0 
-                        ? `${clearedTicketIds.length} completed tickets are archived in the Disputes History tab.` 
-                        : 'Submit a false positive review ticket from the mobile app to see it live here.'}
-                    </p>
-                    {clearedTicketIds.length > 0 && (
-                      <button
-                        onClick={() => setActiveTab('history')}
-                        className="mt-2 px-3.5 py-1.5 rounded-xl bg-[#171E2B] hover:bg-[#1E2636] border border-white/[0.1] text-xs font-mono text-[#00F0A0] inline-flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <History className="w-3.5 h-3.5" />
-                        <span>View Archived Disputes History →</span>
-                      </button>
-                    )}
+                  <div className="p-8 text-center rounded-xl bg-[#090C10] border border-white/[0.04] text-[#738294] font-mono text-xs space-y-2">
+                    <CheckCircle2 className="w-8 h-8 text-[#00F0A0] mx-auto opacity-40" />
+                    <p>All active disputes have been resolved or queue is clean.</p>
                   </div>
                 ) : (
                   filteredAppeals.map((appeal) => (
-                    <div
+                    <div 
                       key={appeal.appealId}
-                      className="p-4 sm:p-5 rounded-2xl bg-[#090C10] border border-white/[0.07] hover:border-white/[0.15] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm"
+                      className="p-4 rounded-xl bg-[#090C10] border border-white/[0.06] hover:border-white/[0.12] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
-                      {/* Ticket Details - Clickable (Req 5) */}
-                      <div 
-                        className="space-y-2 flex-1 cursor-pointer"
-                        onClick={() => setSelectedTicket(appeal)}
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#171E2B] text-[#00F0A0] border border-[#00F0A0]/25">
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-[#BAC5D5] bg-[#171E2B] px-2 py-0.5 rounded border border-white/[0.08]">
                             {appeal.appealId}
                           </span>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                            appeal.status === 'APPROVED_WHITELISTED' || appeal.status === 'APPROVED'
-                              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                              : appeal.status === 'REJECTED'
-                                ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
-                                : 'bg-amber-500/15 text-amber-300 border-amber-500/30 animate-pulse'
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                            appeal.status === 'PENDING_REVIEW' 
+                              ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30' 
+                              : appeal.status === 'APPROVED_WHITELISTED' || appeal.status === 'WHITELISTED'
+                                ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30'
+                                : 'bg-rose-400/20 text-rose-300 border border-rose-400/30'
                           }`}>
                             {appeal.status.replace(/_/g, ' ')}
                           </span>
-                          <span className="text-[10px] font-mono text-[#546274] ml-auto">
+                          <span className="text-[11px] font-mono text-[#546274]">
                             {appeal.submittedAt ? new Date(appeal.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
                           </span>
                         </div>
@@ -827,39 +864,21 @@ export default function BankPortal({ backendUrl }) {
                               </span>
                             ) : null}
                           </div>
-                          <p className="text-xs text-[#BAC5D5] mt-1 font-medium leading-relaxed line-clamp-2">
+                          <p className="text-xs text-[#BAC5D5] mt-1 font-medium leading-relaxed">
                             "{appeal.reason}"
                           </p>
                         </div>
-
-                        <div className="flex items-center gap-2 text-[10px] font-mono text-[#00F0A0] hover:underline pt-1">
-                          <Eye className="w-3 h-3" /> Click to inspect full user telemetry &amp; dispute details →
-                        </div>
                       </div>
 
-                      {/* Decision Buttons */}
-                      {appeal.status === 'PENDING_REVIEW' ? (
-                        <div className="flex sm:flex-col md:flex-row items-center gap-2 shrink-0 pt-2 md:pt-0">
-                          <button
-                            onClick={() => handleResolveAppeal(appeal.appealId, 'APPROVED_WHITELISTED')}
-                            className="px-4 py-2.5 rounded-xl bg-[#00F0A0] hover:bg-[#00D68F] text-[#080B0F] font-mono font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
-                          >
-                            <Check className="w-4 h-4 stroke-[3]" />
-                            <span>Approve &amp; Whitelist</span>
-                          </button>
-                          <button
-                            onClick={() => handleResolveAppeal(appeal.appealId, 'REJECTED')}
-                            className="px-4 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 font-mono font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-                          >
-                            <XCircle className="w-4 h-4" />
-                            <span>Reject &amp; Block</span>
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="shrink-0 text-right font-mono text-xs text-[#738294]">
-                          ✓ Action Resolved
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => setSelectedTicket(appeal)}
+                          className="px-3 py-2 rounded-xl bg-[#00F0A0]/15 hover:bg-[#00F0A0]/25 border border-[#00F0A0]/30 text-xs font-mono text-[#00F0A0] flex items-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Inspect Telemetry</span>
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -868,18 +887,18 @@ export default function BankPortal({ backendUrl }) {
           )}
 
           {/* ══════════════════════════════════════════════════════════
-              TAB 1.5: DISPUTES HISTORY & COMPLETED ARCHIVES
+              TAB 2: DISPUTES HISTORY (Dedicated Archive)
           ══════════════════════════════════════════════════════════ */}
           {activeTab === 'history' && (
             <div className="p-5 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-4 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
                 <div>
                   <h2 className="text-sm font-bold text-white font-mono flex items-center gap-2">
-                    <History className="w-4 h-4 text-[#00F0A0]" />
-                    Disputes &amp; Resolution History Archive
+                    <History className="w-4 h-4 text-emerald-400" />
+                    Resolved Disputes History &amp; Whitelist Archive
                   </h2>
                   <p className="text-[11px] text-[#738294] font-mono mt-0.5">
-                    Complete permanent log of all approved, whitelisted, and rejected cyber disputes.
+                    Permanent audit trail of all approved whitelists and rejected extortion appeals.
                   </p>
                 </div>
 
@@ -890,64 +909,37 @@ export default function BankPortal({ backendUrl }) {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search history records..."
-                      className="bg-[#090C10] border border-white/[0.09] rounded-xl py-1.5 pl-8 pr-3 text-xs font-mono text-white placeholder:text-[#546274] focus:outline-none focus:border-[#00F0A0]/50"
+                      placeholder="Search archive history..."
+                      className="bg-[#090C10] border border-white/[0.09] rounded-xl py-1.5 pl-8 pr-3 text-xs font-mono text-white placeholder:text-[#546274] focus:outline-none focus:border-[#00F0A0]/50 w-52"
                     />
                   </div>
-                </div>
-              </div>
-
-              {/* History Summary Badges */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-xl bg-[#090C10] border border-white/[0.06] text-center">
-                  <span className="text-[10px] font-mono uppercase text-[#738294] block">Total Resolved</span>
-                  <span className="text-lg font-bold text-white font-mono">{historyAppeals.length}</span>
-                </div>
-                <div className="p-3.5 rounded-xl bg-[#090C10] border border-emerald-500/20 text-center">
-                  <span className="text-[10px] font-mono uppercase text-emerald-400 block">Whitelisted / Approved</span>
-                  <span className="text-lg font-bold text-emerald-300 font-mono">
-                    {historyAppeals.filter(a => a.status === 'APPROVED_WHITELISTED' || a.status === 'APPROVED').length}
-                  </span>
-                </div>
-                <div className="p-3.5 rounded-xl bg-[#090C10] border border-rose-500/20 text-center">
-                  <span className="text-[10px] font-mono uppercase text-rose-400 block">Blocked / Rejected</span>
-                  <span className="text-lg font-bold text-rose-300 font-mono">
-                    {historyAppeals.filter(a => a.status === 'REJECTED').length}
-                  </span>
                 </div>
               </div>
 
               {/* History List */}
               <div className="space-y-3">
                 {historyAppeals.length === 0 ? (
-                  <div className="p-12 text-center rounded-2xl bg-[#090C10] border border-white/[0.05] space-y-2">
-                    <History className="w-8 h-8 text-[#546274] mx-auto opacity-70" />
-                    <p className="text-sm font-bold text-white">No Historical Dispute Records</p>
-                    <p className="text-xs text-[#738294]">Resolved dispute cases will automatically be archived here.</p>
+                  <div className="p-8 text-center rounded-xl bg-[#090C10] border border-white/[0.04] text-[#738294] font-mono text-xs space-y-2">
+                    <Archive className="w-8 h-8 text-emerald-400 mx-auto opacity-40" />
+                    <p>No historical resolved tickets matching query.</p>
                   </div>
                 ) : (
                   historyAppeals.map((appeal) => (
-                    <div
+                    <div 
                       key={appeal.appealId}
-                      className="p-4 sm:p-5 rounded-2xl bg-[#090C10] border border-white/[0.07] hover:border-white/[0.15] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm"
+                      className="p-4 rounded-xl bg-[#090C10] border border-white/[0.06] hover:border-white/[0.12] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                     >
-                      <div 
-                        className="space-y-2 flex-1 cursor-pointer"
-                        onClick={() => setSelectedTicket(appeal)}
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#171E2B] text-[#00F0A0] border border-[#00F0A0]/25">
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-[#BAC5D5] bg-[#171E2B] px-2 py-0.5 rounded border border-white/[0.08]">
                             {appeal.appealId}
                           </span>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                            appeal.status === 'APPROVED_WHITELISTED' || appeal.status === 'APPROVED'
-                              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                              : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                            appeal.status === 'APPROVED_WHITELISTED' || appeal.status === 'WHITELISTED'
+                              ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30'
+                              : 'bg-rose-400/20 text-rose-300 border border-rose-400/30'
                           }`}>
                             {appeal.status.replace(/_/g, ' ')}
-                          </span>
-                          <span className="text-[10px] font-mono text-[#546274] ml-auto">
-                            {appeal.submittedAt ? new Date(appeal.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
                           </span>
                         </div>
 
@@ -972,12 +964,11 @@ export default function BankPortal({ backendUrl }) {
                         </div>
                       </div>
 
-                      <div className="flex sm:flex-col md:flex-row items-center gap-2 shrink-0 pt-2 md:pt-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         {clearedTicketIds.includes(appeal.appealId) && (
                           <button
                             onClick={() => handleRestoreTicket(appeal.appealId)}
                             className="px-3 py-2 rounded-xl bg-[#171E2B] hover:bg-[#1E2636] border border-white/[0.1] text-xs font-mono text-[#BAC5D5] hover:text-white flex items-center gap-1.5 transition-all cursor-pointer"
-                            title="Restore back to active disputes queue"
                           >
                             <RotateCcw className="w-3.5 h-3.5 text-[#00F0A0]" />
                             <span>Restore to Queue</span>
@@ -999,131 +990,355 @@ export default function BankPortal({ backendUrl }) {
           )}
 
           {/* ══════════════════════════════════════════════════════════
-              TAB 2: DATABASE SEARCH TABULAR VIEW (Req 3)
+              TAB 3: ENLARGED EXECUTIVE THREAT INTELLIGENCE DATABASE
           ══════════════════════════════════════════════════════════ */}
           {activeTab === 'database_search' && (
-            <div className="p-5 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-4 shadow-xl">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
-                <div>
-                  <h2 className="text-sm font-bold text-white font-mono flex items-center gap-2">
+            <div className="space-y-4">
+              
+              {/* 4 TOP EXECUTIVE METRIC CARDS */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+                <div className="p-4 rounded-2xl bg-[#10141C] border border-white/[0.08] shadow-md space-y-1">
+                  <div className="flex items-center justify-between text-[#8494A8]">
+                    <span className="text-[10.5px] font-mono uppercase font-bold tracking-wider">Total Threat Records</span>
                     <Database className="w-4 h-4 text-[#00F0A0]" />
-                    National Threat Intelligence Registry (I4C &amp; Sanchar Saathi)
-                  </h2>
-                  <p className="text-[11px] text-[#738294] font-mono mt-0.5">Filter by UPI ID vs +91 Phone numbers in tabular form.</p>
+                  </div>
+                  <div className="text-2xl font-bold text-white font-mono">{threats.length.toLocaleString()}</div>
+                  <p className="text-[10px] text-[#00F0A0] font-mono">100% Ingested &amp; Searchable</p>
                 </div>
 
-                <button
-                  onClick={() => setShowAddThreatModal(true)}
-                  className="px-3.5 py-2 rounded-xl bg-[#00F0A0] hover:bg-[#00D68F] text-[#080B0F] text-xs font-mono font-bold flex items-center gap-1.5 shrink-0 cursor-pointer shadow-md"
-                >
-                  <PlusCircle className="w-3.5 h-3.5" />
-                  <span>Add Threat Record</span>
-                </button>
+                <div className="p-4 rounded-2xl bg-[#10141C] border border-white/[0.08] shadow-md space-y-1">
+                  <div className="flex items-center justify-between text-[#8494A8]">
+                    <span className="text-[10.5px] font-mono uppercase font-bold tracking-wider">Flagged Phone Numbers</span>
+                    <Phone className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-white font-mono">{totalPhoneCount.toLocaleString()}</div>
+                  <p className="text-[10px] text-purple-300 font-mono">Chakshu / Telecom Traps</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#10141C] border border-white/[0.08] shadow-md space-y-1">
+                  <div className="flex items-center justify-between text-[#8494A8]">
+                    <span className="text-[10.5px] font-mono uppercase font-bold tracking-wider">Flagged UPI VPAs</span>
+                    <Building2 className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-white font-mono">{totalVpaCount.toLocaleString()}</div>
+                  <p className="text-[10px] text-cyan-300 font-mono">NPCI Mule Registry</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#10141C] border border-white/[0.08] shadow-md space-y-1">
+                  <div className="flex items-center justify-between text-[#8494A8]">
+                    <span className="text-[10.5px] font-mono uppercase font-bold tracking-wider">Lookup Response SLA</span>
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-white font-mono">&lt; 4.2 ms</div>
+                  <p className="text-[10px] text-emerald-300 font-mono">In-Memory Zero Delay</p>
+                </div>
               </div>
 
-              {/* Filter Pills: UPI ID vs Phone (+91) (Req 3) */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono uppercase text-[#738294]">Type Filter:</span>
-                  {[
-                    { id: 'ALL', label: `All (${threats.length})` },
-                    { id: 'VPA', label: 'UPI IDs Only' },
-                    { id: 'PHONE', label: 'Phone Numbers (+91) Only' }
-                  ].map(f => (
+              {/* MAIN DATA TABLE WORKSTATION */}
+              <div className="p-5 rounded-2xl bg-[#10141C] border border-white/[0.08] space-y-4 shadow-xl">
+                
+                {/* Header & Controls Bar */}
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
+                  <div>
+                    <h2 className="text-base font-bold text-white font-mono flex items-center gap-2">
+                      <Database className="w-5 h-5 text-[#00F0A0]" />
+                      National Cyber Threat Intelligence Registry
+                    </h2>
+                    <p className="text-xs text-[#8494A8] font-mono mt-0.5">
+                      Ingested from I4C (1930 Helpline), Sanchar Saathi (Chakshu), NPCI Mule Registry &amp; Indian Online Fraud Datasets (2026).
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {/* CSV Export Button */}
                     <button
-                      key={f.id}
-                      onClick={() => setSelectedThreatType(f.id)}
-                      className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                        selectedThreatType === f.id
-                          ? 'bg-[#00F0A0]/15 text-[#00F0A0] font-bold border border-[#00F0A0]/30'
-                          : 'bg-[#090C10] text-[#8494A8] border border-white/[0.05] hover:text-white'
-                      }`}
+                      onClick={handleExportThreatsCsv}
+                      className="px-3.5 py-2 rounded-xl bg-[#171E2B] hover:bg-[#1F293A] text-white border border-white/[0.12] text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm active:scale-95"
                     >
-                      {f.label}
+                      <Download className="w-3.5 h-3.5 text-[#00F0A0]" />
+                      <span>Export CSV ({filteredThreats.length.toLocaleString()})</span>
                     </button>
-                  ))}
+
+                    {/* Add Record Button */}
+                    <button
+                      onClick={() => setShowAddThreatModal(true)}
+                      className="px-3.5 py-2 rounded-xl bg-[#00F0A0] hover:bg-[#00D68F] text-[#080B0F] text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition-all"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>Add Record</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-[#546274] absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search +91 phone or VPA..."
-                    className="bg-[#090C10] border border-white/[0.09] rounded-xl py-1.5 pl-8 pr-3 text-xs font-mono text-white placeholder:text-[#546274] focus:outline-none focus:border-[#00F0A0]/50 w-64"
-                  />
-                </div>
-              </div>
+                {/* Filter Chips Bar */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+                  
+                  {/* Type Filter Pills */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10.5px] font-mono uppercase text-[#738294] font-bold">Type:</span>
+                    {[
+                      { id: 'ALL', label: `All (${threats.length.toLocaleString()})` },
+                      { id: 'VPA', label: `💳 UPI VPAs (${totalVpaCount.toLocaleString()})` },
+                      { id: 'PHONE', label: `📞 Phones (${totalPhoneCount.toLocaleString()})` }
+                    ].map(f => (
+                      <button
+                        key={f.id}
+                        onClick={() => {
+                          setSelectedThreatType(f.id);
+                          setThreatPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer ${
+                          selectedThreatType === f.id
+                            ? 'bg-[#00F0A0]/15 text-[#00F0A0] font-bold border border-[#00F0A0]/30 shadow-sm'
+                            : 'bg-[#090C10] text-[#8494A8] border border-white/[0.05] hover:text-white'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
 
-              {/* Tabular Form View (Req 3) */}
-              <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-[#090C10] text-[#738294] uppercase text-[10px] tracking-wider border-b border-white/[0.06]">
-                    <tr>
-                      <th className="py-3 px-4">Identifier (VPA / Phone)</th>
-                      <th className="py-3 px-4">Type</th>
-                      <th className="py-3 px-4">Category</th>
-                      <th className="py-3 px-4">Risk Score</th>
-                      <th className="py-3 px-4">Source</th>
-                      <th className="py-3 px-4">Details</th>
-                      <th className="py-3 px-4 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.04] bg-[#090C10]/60">
-                    {filteredThreats.length === 0 ? (
+                    <span className="text-white/20 mx-1">|</span>
+
+                    {/* Category Filter Pills */}
+                    <span className="text-[10.5px] font-mono uppercase text-[#738294] font-bold">Category:</span>
+                    {[
+                      { id: 'ALL', label: 'All Categories' },
+                      { id: 'DIGITAL_ARREST', label: '🚨 Digital Arrest' },
+                      { id: 'ELECTRICITY', label: '⚡ Electricity' },
+                      { id: 'KYC', label: '⚠️ Fake KYC' },
+                      { id: 'MULE', label: '🏦 Mule Accounts' }
+                    ].map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          setThreatCategoryFilter(c.id);
+                          setThreatPage(1);
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer ${
+                          threatCategoryFilter === c.id
+                            ? 'bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30'
+                            : 'bg-[#090C10] text-[#738294] border border-white/[0.04] hover:text-[#BAC5D5]'
+                        }`}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search Box with Clear Button */}
+                  <div className="relative min-w-[260px]">
+                    <Search className="w-4 h-4 text-[#546274] absolute left-3.5 top-2.5" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setThreatPage(1);
+                      }}
+                      placeholder="Search phone, VPA, bank, or keyword..."
+                      className="w-full bg-[#090C10] border border-white/[0.1] rounded-xl py-2 pl-9 pr-8 text-xs font-mono text-white placeholder:text-[#546274] focus:outline-none focus:border-[#00F0A0]/60 shadow-inner"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2.5 top-2.5 text-[#738294] hover:text-white"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Main Table */}
+                <div className="overflow-x-auto rounded-xl border border-white/[0.08] shadow-md bg-[#090C10]">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead className="bg-[#0D1117] text-[#738294] uppercase text-[10px] tracking-wider border-b border-white/[0.08]">
                       <tr>
-                        <td colSpan={7} className="py-8 text-center text-[#738294]">
-                          No threat records found matching current query.
-                        </td>
+                        <th className="py-3 px-4">Identifier (VPA / Phone)</th>
+                        <th className="py-3 px-4">Entity Type</th>
+                        <th className="py-3 px-4">Threat Category</th>
+                        <th className="py-3 px-4">Risk Confidence</th>
+                        <th className="py-3 px-4">Reports</th>
+                        <th className="py-3 px-4">Source Registry</th>
+                        <th className="py-3 px-4">Forensic Signature</th>
+                        <th className="py-3 px-4 text-right">Dossier Action</th>
                       </tr>
-                    ) : (
-                      filteredThreats.map((t) => (
-                        <tr 
-                          key={t.id || t.identifier} 
-                          onClick={() => setSelectedThreatRecord(t)}
-                          className="hover:bg-white/[0.05] transition-all cursor-pointer group"
-                        >
-                          <td className="py-3 px-4 font-bold text-white group-hover:text-[#00F0A0] transition-colors">
-                            {t.identifier}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              t.type === 'VPA' || t.identifier?.includes('@')
-                                ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
-                                : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
-                            }`}>
-                              {t.type === 'VPA' || t.identifier?.includes('@') ? 'UPI VPA' : 'PHONE'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-rose-300 font-bold">
-                            {t.category}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              (t.riskScore || 0) >= 80 
-                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
-                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                            }`}>
-                              {t.riskScore || 90}% THREAT
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-[#8494A8] text-[11px]">
-                            {t.source || 'I4C 1930'}
-                          </td>
-                          <td className="py-3 px-4 text-[#BAC5D5] text-[11px] max-w-xs truncate">
-                            {t.details}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <span className="text-[10px] font-mono text-[#00F0A0] group-hover:underline flex items-center justify-end gap-1">
-                              <Eye className="w-3 h-3" /> Inspect
-                            </span>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.04] bg-[#090C10]/70">
+                      {paginatedThreats.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="py-12 text-center text-[#738294] space-y-2">
+                            <Database className="w-8 h-8 text-[#546274] mx-auto opacity-40" />
+                            <p className="text-xs">No threat records found matching current query "{searchQuery}".</p>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        paginatedThreats.map((t) => {
+                          const isVpa = t.type === 'VPA' || t.identifier?.includes('@');
+                          const isCopied = copiedIdentifier === t.identifier;
+                          return (
+                            <tr 
+                              key={t.id || t.identifier} 
+                              className="hover:bg-white/[0.04] transition-all group"
+                            >
+                              {/* Identifier & Quick Copy */}
+                              <td className="py-3 px-4 font-bold text-white">
+                                <div className="flex items-center gap-2">
+                                  <span 
+                                    onClick={() => setSelectedThreatRecord(t)}
+                                    className="group-hover:text-[#00F0A0] transition-colors cursor-pointer"
+                                  >
+                                    {t.identifier}
+                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopyIdentifier(t.identifier);
+                                    }}
+                                    className="p-1 rounded bg-white/[0.05] hover:bg-white/[0.1] text-[#738294] hover:text-white transition-all cursor-pointer"
+                                    title="Copy Identifier"
+                                  >
+                                    {isCopied ? <Check className="w-3 h-3 text-[#00F0A0]" /> : <Copy className="w-3 h-3" />}
+                                  </button>
+                                </div>
+                              </td>
+
+                              {/* Entity Type Badge */}
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  isVpa
+                                    ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+                                    : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                                }`}>
+                                  {isVpa ? '💳 UPI VPA' : '📞 PHONE (+91)'}
+                                </span>
+                              </td>
+
+                              {/* Category */}
+                              <td className="py-3 px-4 text-rose-300 font-bold">
+                                {t.category?.replace(/_/g, ' ') || 'EXTORTION'}
+                              </td>
+
+                              {/* Risk Score Meter */}
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    (t.riskScore || 0) >= 90 
+                                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
+                                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  }`}>
+                                    {t.riskScore || 90}% THREAT
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Reports Count */}
+                              <td className="py-3 px-4 text-[#BAC5D5]">
+                                <span className="px-2 py-0.5 rounded bg-[#171E2B] border border-white/[0.08] text-[10.5px]">
+                                  {t.reportCount || 1} reports
+                                </span>
+                              </td>
+
+                              {/* Source */}
+                              <td className="py-3 px-4 text-[#8494A8] text-[11px]">
+                                <span className="truncate max-w-[150px] block" title={t.source}>
+                                  {t.source ? t.source.replace(/_/g, ' ') : 'I4C 1930 HELPLINE'}
+                                </span>
+                              </td>
+
+                              {/* Details */}
+                              <td className="py-3 px-4 text-[#BAC5D5] text-[11px] max-w-sm">
+                                <span className="line-clamp-1" title={t.details}>
+                                  {t.details || 'Identified in suspicious transactions.'}
+                                </span>
+                              </td>
+
+                              {/* Action Button */}
+                              <td className="py-3 px-4 text-right">
+                                <button
+                                  onClick={() => setSelectedThreatRecord(t)}
+                                  className="px-2.5 py-1 rounded-lg bg-[#00F0A0]/10 hover:bg-[#00F0A0]/20 border border-[#00F0A0]/30 text-[11px] text-[#00F0A0] flex items-center gap-1 ml-auto transition-all cursor-pointer"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                  <span>Inspect Dossier</span>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* PAGINATION BAR */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 text-xs font-mono text-[#8494A8]">
+                  <div className="flex items-center gap-3">
+                    <span>
+                      Showing <strong className="text-white">{filteredThreats.length > 0 ? (currentThreatPage - 1) * Number(itemsPerPage === 'ALL' ? filteredThreats.length : itemsPerPage) + 1 : 0}</strong> - <strong className="text-white">{Math.min(currentThreatPage * Number(itemsPerPage === 'ALL' ? filteredThreats.length : itemsPerPage), filteredThreats.length)}</strong> of <strong className="text-[#00F0A0]">{filteredThreats.length.toLocaleString()}</strong> records
+                    </span>
+
+                    <div className="flex items-center gap-1 ml-2">
+                      <span className="text-[11px] text-[#546274]">Rows per page:</span>
+                      {[25, 50, 100, 250].map(cnt => (
+                        <button
+                          key={cnt}
+                          onClick={() => {
+                            setItemsPerPage(cnt);
+                            setThreatPage(1);
+                          }}
+                          className={`px-2 py-0.5 rounded text-[10.5px] transition-all cursor-pointer ${
+                            itemsPerPage === cnt
+                              ? 'bg-[#00F0A0] text-black font-bold'
+                              : 'bg-[#171E2B] text-[#BAC5D5] hover:text-white'
+                          }`}
+                        >
+                          {cnt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Page Navigation Buttons */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setThreatPage(1)}
+                      disabled={currentThreatPage <= 1}
+                      className="p-1.5 rounded-lg bg-[#171E2B] border border-white/[0.08] text-[#BAC5D5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      title="First Page"
+                    >
+                      <ChevronsLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setThreatPage(p => Math.max(1, p - 1))}
+                      disabled={currentThreatPage <= 1}
+                      className="px-2.5 py-1 rounded-lg bg-[#171E2B] border border-white/[0.08] text-[#BAC5D5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                    </button>
+
+                    <span className="px-3 py-1 rounded-lg bg-[#090C10] border border-white/[0.1] text-white font-bold text-xs">
+                      Page {currentThreatPage} / {totalThreatPages}
+                    </span>
+
+                    <button
+                      onClick={() => setThreatPage(p => Math.min(totalThreatPages, p + 1))}
+                      disabled={currentThreatPage >= totalThreatPages}
+                      className="px-2.5 py-1 rounded-lg bg-[#171E2B] border border-white/[0.08] text-[#BAC5D5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      Next <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setThreatPage(totalThreatPages)}
+                      disabled={currentThreatPage >= totalThreatPages}
+                      className="p-1.5 rounded-lg bg-[#171E2B] border border-white/[0.08] text-[#BAC5D5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      title="Last Page"
+                    >
+                      <ChevronsRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
