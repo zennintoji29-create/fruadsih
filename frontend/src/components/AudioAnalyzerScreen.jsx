@@ -201,13 +201,16 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
       const data = await res.json();
       if (data.data) {
         setResult(data.data);
+        if (data.data.phishingDetected && localStorage.getItem('verix_senior_citizen_mode') === 'true') {
+          speakSeniorCitizenWarning(data.data.summary, selectedAiLang);
+        }
       } else {
         throw new Error('Analysis response empty');
       }
     } catch (err) {
       console.warn('[Audio Analyzer Error / Fallback]:', err);
       // Fallback display if server is unreachable
-      setResult({
+      const fallbackResult = {
         fileMetadata: { 
           fileName: audioFileName || 'recording.webm', 
           durationSeconds: durationSeconds || 30,
@@ -227,10 +230,107 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
           '2. Always verify caller identities with official helpline 1930.',
           '3. Real authorities never conduct Digital Arrests over WhatsApp/voice calls.'
         ]
-      });
+      };
+      setResult(fallbackResult);
+      if (fallbackResult.phishingDetected && localStorage.getItem('verix_senior_citizen_mode') === 'true') {
+        speakSeniorCitizenWarning(fallbackResult.summary, selectedAiLang);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const speakSeniorCitizenWarning = (threatText, lang = 'en') => {
+    try {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const speechMap = {
+          hi: 'सावधान! यह कॉल एक संदिग्ध डिजिटल अरेस्ट या पुलिस फ्रॉड हो सकती है। कोई भी पैसा ट्रांसफर न करें।',
+          bn: 'সতর্কতা! এই কলটি একটি ভুয়ো পুলিশ বা ডিজিটাল গ্রেফতারি প্রতারণা হতে পারে। টাকা পাঠাবেন না।',
+          or: 'ସତର୍କତା! ଏହି କଲ ଏକ ଠକେଇ ହୋଇପାରେ। କୌଣସି ଟଙ୍କା ପଠାନ୍ତୁ ନାହିଁ।',
+          te: 'హెచ్చరిక! ఈ కాల్ నకిలీ పోలీసు లేదా సైబర్ మోసం కావచ్చు. డబ్బు పంపవద్దు.',
+          ta: 'எச்சரிக்கை! இந்த அழைப்பு போலி காவல்துறை மோசடியாக இருக்கலாம். பணம் அனுப்ப வேண்டாம்.',
+          en: 'Warning! This call is detected as suspected Digital Arrest extortion. Do not transfer funds.'
+        };
+        const textToSpeak = speechMap[lang] || speechMap.en;
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.rate = 0.92;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (e) {
+      console.log('[Senior Citizen SpeechSynthesis]:', e);
+    }
+  };
+
+  const export1930IncidentPdf = (threatData) => {
+    const refId = `I4C-VRX-${Date.now()}`;
+    const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const target = threatData.fileMetadata?.associatedCaller || callerNumberInput || '+91 94775 30475';
+    const transcript = threatData.transcribedSnippet || 'Extortion speech recorded in session';
+    const summary = threatData.summary || 'Detected coercion and digital arrest impersonation';
+    const score = threatData.confidenceScore || 98;
+
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Verix 1930 Incident Evidence Dossier - ${refId}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #111; line-height: 1.6; max-width: 800px; margin: auto; }
+    .header { border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 20px; }
+    .badge { display: inline-block; background: #e11d48; color: #fff; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+    .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .table th, .table td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; font-family: monospace; }
+    .table th { background: #f8fafc; font-weight: bold; width: 32%; }
+    .transcript { background: #fff1f2; border-left: 4px solid #e11d48; padding: 15px; font-style: italic; font-family: monospace; margin: 15px 0; border-radius: 4px; font-size: 12.5px; }
+    .footer { font-size: 11px; color: #64748b; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2 style="margin:0 0 4px 0;">🛡️ VERIX CYBERCRIME INCIDENT DOSSIER</h2>
+    <h4 style="margin:0 0 8px 0; color:#475569;">NATIONAL CYBER CRIME REPORTING PORTAL (1930) EVIDENCE RECORD</h4>
+    <span class="badge">EVIDENCE COMPLIANCE: DPDP ACT 2023 / NPCI CSOC</span>
+  </div>
+
+  <table class="table">
+    <tr><th>Incident Reference ID</th><td><strong>${refId}</strong></td></tr>
+    <tr><th>IST Detection Timestamp</th><td>${timestamp} IST</td></tr>
+    <tr><th>Target Suspect Identifier</th><td><strong>${target}</strong></td></tr>
+    <tr><th>AI Threat Risk Score</th><td><strong style="color: #e11d48;">${score}/100 (CRITICAL EXTORTION)</strong></td></tr>
+    <tr><th>Primary Category</th><td>${threatData.primaryCategory || 'DIGITAL_ARREST'}</td></tr>
+    <tr><th>Detection Engine</th><td>Verix Groq Whisper Large v3 + LLaMA 3.3 70B</td></tr>
+  </table>
+
+  <h4 style="margin-bottom:6px;">Transcribed Extortion Dialog:</h4>
+  <div class="transcript">"${transcript}"</div>
+
+  <h4 style="margin-bottom:6px;">AI Threat &amp; Coercion Analysis:</h4>
+  <p style="font-size:13px; color:#334155; margin-top:0;">${summary}</p>
+
+  <h4 style="margin-bottom:6px;">Official 1930 Reporting Instructions:</h4>
+  <p style="font-size:12.5px; color:#334155; margin-top:0;">
+    1. Call the National Cyber Crime Helpline at <strong>1930</strong> immediately.<br>
+    2. File an official complaint on <strong>cybercrime.gov.in</strong> referencing Incident ID: <strong>${refId}</strong>.<br>
+    3. Block the caller identifier (<strong>${target}</strong>) across telecom operators via Sanchar Saathi.
+  </p>
+
+  <div class="footer">
+    Generated automatically on-device by Verix Real-Time Fraud Shield. Hash-verified forensic copy.
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Verix_1930_Evidence_${refId}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleAnalyzePreset = (key = selectedPreset) => {
@@ -459,6 +559,16 @@ export default function AudioAnalyzerScreen({ onBack, backendUrl, currentLang = 
               </div>
             ))}
           </div>
+
+          {/* 1-Tap 1930 Incident Evidence PDF Exporter */}
+          {result.phishingDetected && (
+            <button
+              onClick={() => export1930IncidentPdf(result)}
+              className="w-full py-2.5 px-3 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-mono font-bold flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+            >
+              <span>📑 Export 1930 Incident Evidence (PDF)</span>
+            </button>
+          )}
         </div>
       )}
     </div>

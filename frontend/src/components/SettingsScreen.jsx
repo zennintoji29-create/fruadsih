@@ -12,10 +12,19 @@ export default function SettingsScreen({ onBack, user, onUpdateUser, onLogout, c
 
   const [maxAmountLimit, setMaxAmountLimit] = useState(user?.settings?.maxAmountLimit || 10000);
   const [voicePhishingMode, setVoicePhishingMode] = useState(user?.settings?.voicePhishingMode !== false);
-  const [callScreeningEnabled, setCallScreeningEnabled] = useState(user?.settings?.callScreeningEnabled !== false);
-  const [biometricEnabled, setBiometricEnabled] = useState(() => {
-    return localStorage.getItem('shieldx_biometric_enabled') === 'true';
+  const [seniorCitizenMode, setSeniorCitizenMode] = useState(() => {
+    return localStorage.getItem('verix_senior_citizen_mode') === 'true';
   });
+
+  const handleToggleSeniorCitizen = () => {
+    const next = !seniorCitizenMode;
+    setSeniorCitizenMode(next);
+    try {
+      localStorage.setItem('verix_senior_citizen_mode', next ? 'true' : 'false');
+    } catch (e) {}
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 2000);
+  };
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [showPermissionsTab, setShowPermissionsTab] = useState(false);
 
@@ -197,6 +206,36 @@ export default function SettingsScreen({ onBack, user, onUpdateUser, onLogout, c
         >
           <div className={`w-5 h-5 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
             biometricEnabled ? 'translate-x-6 bg-[#1A0317]' : 'translate-x-0 bg-white'
+          }`} />
+        </button>
+      </div>
+
+      {/* Senior Citizen Defense Mode (Voice Alerts) */}
+      <div className="rounded-[24px] p-4 flex items-center justify-between" style={glassCard}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[14px] flex items-center justify-center" style={{ background: 'rgba(232,84,107,0.15)', color: '#F87396' }}>
+            <Volume2 className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-[12.5px] font-bold text-white">Senior Citizen Defense Mode</h4>
+              <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                VOICE ALERT
+              </span>
+            </div>
+            <p className="text-[10.5px] text-white/40">Loud regional voice warning on scam calls &amp; payment blocks</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleToggleSeniorCitizen}
+          className={`w-12 h-6 rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer ${
+            seniorCitizenMode ? 'bg-[#D8F828]' : 'bg-white/15'
+          }`}
+        >
+          <div className={`w-5 h-5 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+            seniorCitizenMode ? 'translate-x-6 bg-[#1A0317]' : 'translate-x-0 bg-white'
           }`} />
         </button>
       </div>
