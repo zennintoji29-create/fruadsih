@@ -253,3 +253,33 @@ function upperBound(arr, target) {
 - Using the half-open interval `[left, right)` prevents infinite loop edge cases when searching boundaries.
 - The unsigned bitwise shift `>>> 1` computes midpoint without 32-bit integer arithmetic overflow.
 - Applicable to range queries, frequency counting in sorted arrays, and search space optimization.
+
+---
+
+### 📘 [Entry #2/28] B-Tree vs LSM-Tree Storage Engines (Postgres vs Cassandra/RocksDB)
+> **Category:** `DATABASES` | **Tag:** `Database Internals` | **Recorded:** Sep 7, 2026, 10:07 PM
+
+#### 💡 Overview
+Architectural comparison of read-optimized B+ Trees vs write-optimized Log-Structured Merge Trees.
+
+#### 💻 Implementation & Code Example
+```sql
+-- B-Tree Index: Ideal for point lookups and range scans with in-place updates
+CREATE INDEX idx_users_email_status ON users(email, status);
+
+-- Composite Index Rule: Leftmost prefix matching
+-- ✅ Uses index:
+SELECT * FROM users WHERE email = 'alice@example.com';
+SELECT * FROM users WHERE email = 'alice@example.com' AND status = 'active';
+
+-- ❌ Cannot use index efficiently (skips leftmost column):
+SELECT * FROM users WHERE status = 'active';
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** B-Tree: O(log N) Reads, O(log N) Writes with random I/O | LSM: O(1) Writes (sequential I/O), O(log N) Reads
+
+#### 🎯 Key Architectural Takeaways
+- B-Trees (PostgreSQL, MySQL InnoDB) write directly to data pages, offering exceptional read performance and predictable ACID latency.
+- LSM-Trees (RocksDB, Cassandra, ClickHouse) append to an in-memory MemTable and flush to SSTables sequentially, maximizing write throughput.
+- Always design composite index column order based on query cardinality (high selectivity first).
