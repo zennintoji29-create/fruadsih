@@ -393,3 +393,54 @@ class Trie {
 - Lookups depend only on the length of the query string, independent of the total number of dictionary words.
 - Shared prefix storage drastically reduces memory overhead for common vocabularies.
 - Used in search engine autocomplete, IP routing tables (longest prefix matching), and spell checkers.
+
+---
+
+### 📘 [Entry #5/28] Rate Limiting: Token Bucket Algorithm with Redis
+> **Category:** `SYSTEM-DESIGN` | **Tag:** `Distributed Systems` | **Recorded:** Sep 7, 2026, 10:08 PM
+
+#### 💡 Overview
+Atomic distributed token bucket algorithm preventing burst overload while allowing controlled spikes.
+
+#### 💻 Implementation & Code Example
+```javascript
+// Atomic Token Bucket implementation using Redis Lua Script
+const tokenBucketLua = `
+  local key = KEYS[1]
+  local limit = tonumber(ARGV[1])
+  local refillRate = tonumber(ARGV[2]) -- tokens per second
+  local now = tonumber(ARGV[3])
+  local requested = tonumber(ARGV[4])
+
+  local bucket = redis.call('HMGET', key, 'tokens', 'lastUpdated')
+  local tokens = tonumber(bucket[1])
+  local lastUpdated = tonumber(bucket[2])
+
+  if tokens == nil then
+    tokens = limit
+    lastUpdated = now
+  else
+    local elapsed = math.max(0, now - lastUpdated)
+    tokens = math.min(limit, tokens + (elapsed * refillRate))
+    lastUpdated = now
+  end
+
+  if tokens >= requested then
+    tokens = tokens - requested
+    redis.call('HMSET', key, 'tokens', tokens, 'lastUpdated', lastUpdated)
+    redis.call('EXPIRE', key, math.ceil(limit / refillRate) * 2)
+    return 1 -- Allowed
+  else
+    redis.call('HMSET', key, 'tokens', tokens, 'lastUpdated', lastUpdated)
+    return 0 -- Denied (Rate Limited)
+  end
+`;
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Time: O(1) atomic execution | Space: O(1) per client key
+
+#### 🎯 Key Architectural Takeaways
+- Lua scripts execute atomically on Redis single-threaded engine, preventing race conditions between concurrent requests.
+- Token bucket allows bursts up to maximum capacity while enforcing average throughput via the refill rate.
+- Critical for API Gateways, payment gateway protection, and DDoS mitigation.
