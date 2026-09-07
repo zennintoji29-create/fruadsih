@@ -97,3 +97,68 @@
 - [2026-09-07T22:04:50.047Z] Update 28/30
 - [2026-09-07T22:04:54.330Z] Update 29/30
 - [2026-09-07T22:04:58.400Z] Update 30/30
+
+---
+
+### 📘 [Entry #1/2] Advanced Debounce & Throttle with Immediate Execution Option
+> **Category:** `JAVASCRIPT` | **Tag:** `Functional Programming` | **Recorded:** Sep 8, 2026, 03:36 AM
+
+#### 💡 Overview
+Optimizing high-frequency event streams (scroll, resize, search input) in web applications.
+
+#### 💻 Implementation & Code Example
+```javascript
+// Debounce: Delays execution until 'wait' ms after the last trigger
+function debounce(fn, wait = 300, immediate = false) {
+  let timeoutId = null;
+
+  const debounced = function (...args) {
+    const callNow = immediate && !timeoutId;
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      timeoutId = null;
+      if (!immediate) fn.apply(this, args);
+    }, wait);
+
+    if (callNow) fn.apply(this, args);
+  };
+
+  debounced.cancel = () => {
+    clearTimeout(timeoutId);
+    timeoutId = null;
+  };
+
+  return debounced;
+}
+
+// Throttle: Guarantees execution at most once every 'limit' ms
+function throttle(fn, limit = 200) {
+  let inThrottle = false;
+  let lastArgs = null;
+
+  return function (...args) {
+    if (!inThrottle) {
+      fn.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+        if (lastArgs) {
+          fn.apply(this, lastArgs);
+          lastArgs = null;
+        }
+      }, limit);
+    } else {
+      lastArgs = args;
+    }
+  };
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Time: O(1) per invocation | Memory: O(1) closure context
+
+#### 🎯 Key Architectural Takeaways
+- Use Debounce for autocomplete searches and auto-saving drafts (wait until user pauses typing).
+- Use Throttle for scroll progress bars, window resizing, and infinite scroll triggers.
+- Always provide a `.cancel()` method to clean up timers on component unmount in React/Vue.
