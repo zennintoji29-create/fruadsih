@@ -1364,3 +1364,33 @@ function lengthOfLongestSubstring(s) {
 - Avoids nested O(N^2) brute force loops by maintaining a dynamic valid window.
 - Storing last seen indices allows the left pointer to skip intermediate elements directly.
 - Foundational pattern for streaming data analytics, rate limiting windows, and packet stream parsing.
+
+---
+
+### 📘 [Entry #26/28] B-Tree vs LSM-Tree Storage Engines (Postgres vs Cassandra/RocksDB)
+> **Category:** `DATABASES` | **Tag:** `Database Internals` | **Recorded:** Sep 7, 2026, 10:09 PM
+
+#### 💡 Overview
+Architectural comparison of read-optimized B+ Trees vs write-optimized Log-Structured Merge Trees.
+
+#### 💻 Implementation & Code Example
+```sql
+-- B-Tree Index: Ideal for point lookups and range scans with in-place updates
+CREATE INDEX idx_users_email_status ON users(email, status);
+
+-- Composite Index Rule: Leftmost prefix matching
+-- ✅ Uses index:
+SELECT * FROM users WHERE email = 'alice@example.com';
+SELECT * FROM users WHERE email = 'alice@example.com' AND status = 'active';
+
+-- ❌ Cannot use index efficiently (skips leftmost column):
+SELECT * FROM users WHERE status = 'active';
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** B-Tree: O(log N) Reads, O(log N) Writes with random I/O | LSM: O(1) Writes (sequential I/O), O(log N) Reads
+
+#### 🎯 Key Architectural Takeaways
+- B-Trees (PostgreSQL, MySQL InnoDB) write directly to data pages, offering exceptional read performance and predictable ACID latency.
+- LSM-Trees (RocksDB, Cassandra, ClickHouse) append to an in-memory MemTable and flush to SSTables sequentially, maximizing write throughput.
+- Always design composite index column order based on query cardinality (high selectivity first).
