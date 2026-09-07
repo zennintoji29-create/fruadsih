@@ -724,3 +724,47 @@ WHERE id = 101 AND version = 4;
 - Optimistic locking shines in read-heavy workflows where concurrent updates on the same row are rare.
 - Pessimistic locking (`SELECT FOR UPDATE`) is safer in high-contention inventory checkout systems.
 - OCC completely eliminates database deadlocks caused by inverted lock acquisition order.
+
+---
+
+### 📘 [Entry #11/28] Idempotency Keys in Distributed Payment & API Workflows
+> **Category:** `SYSTEM-DESIGN` | **Tag:** `Distributed Data` | **Recorded:** Sep 7, 2026, 10:08 PM
+
+#### 💡 Overview
+Guarantee exactly-once semantics for non-idempotent HTTP methods (POST/PATCH).
+
+#### 💻 Implementation & Code Example
+```javascript
+async function idempotencyMiddleware(req, res, next) {
+  const idempotencyKey = req.headers['idempotency-key'];
+  if (!idempotencyKey) return next();
+
+  const key = `idempotency:${idempotencyKey}`;
+  
+  // Try acquiring lock / retrieving cached response atomically
+  const cached = await redisClient.get(key);
+  if (cached) {
+    const { status, body } = JSON.parse(cached);
+    return res.status(status).json(body);
+  }
+
+  // Intercept res.json to cache response payload
+  const originalJson = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      redisClient.set(key, JSON.stringify({ status: res.statusCode, body }), 'EX', 86400);
+    }
+    return originalJson(body);
+  };
+
+  next();
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Overhead: O(1) Redis check | Consistency: Exactly-once execution guarantee
+
+#### 🎯 Key Architectural Takeaways
+- Prevents duplicate charges when client network drops before receiving the 200 OK response.
+- Idempotency keys should expire after a predictable TTL (e.g., 24 hours).
+- Crucial design pillar for Stripe, PayPal, and modern banking APIs.
