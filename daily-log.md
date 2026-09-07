@@ -283,3 +283,52 @@ SELECT * FROM users WHERE status = 'active';
 - B-Trees (PostgreSQL, MySQL InnoDB) write directly to data pages, offering exceptional read performance and predictable ACID latency.
 - LSM-Trees (RocksDB, Cassandra, ClickHouse) append to an in-memory MemTable and flush to SSTables sequentially, maximizing write throughput.
 - Always design composite index column order based on query cardinality (high selectivity first).
+
+---
+
+### 📘 [Entry #3/28] SOLID Principles: Dependency Inversion in Node.js & TypeScript
+> **Category:** `CLEAN-CODE` | **Tag:** `Clean Architecture` | **Recorded:** Sep 7, 2026, 10:08 PM
+
+#### 💡 Overview
+Building loosely-coupled, testable architectures using interface contracts.
+
+#### 💻 Implementation & Code Example
+```typescript
+// High-level modules should depend on abstractions, not concretions
+
+// 1. Abstraction contract
+interface NotificationService {
+  send(to: string, message: string): Promise<void>;
+}
+
+// 2. Concrete implementations
+class EmailNotificationService implements NotificationService {
+  async send(to: string, message: string) {
+    console.log(`Sending email to ${to}: ${message}`);
+  }
+}
+
+class SMSNotificationService implements NotificationService {
+  async send(to: string, message: string) {
+    console.log(`Sending SMS to ${to}: ${message}`);
+  }
+}
+
+// 3. High-level business service (cleanly decoupled)
+class OrderService {
+  constructor(private notifier: NotificationService) {}
+
+  async checkout(orderId: string, customerContact: string) {
+    // Process order logic...
+    await this.notifier.send(customerContact, `Order #${orderId} confirmed!`);
+  }
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Maintainability: High | Unit Testing: Trivially mockable without monkey-patching
+
+#### 🎯 Key Architectural Takeaways
+- Services depend on interfaces rather than direct class instantiations (`new EmailService()`).
+- Swapping email for SMS or a mock testing harness requires zero changes inside `OrderService`.
+- Foundational principle for Domain-Driven Design (DDD) and Hexagonal Architectures.
