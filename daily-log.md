@@ -1181,3 +1181,40 @@ class CircuitBreaker {
 - Fails fast when downstream services are dead, protecting your own thread pools and connection pools.
 - The Half-Open state safely probes the failing service before redirecting full traffic.
 - Standard pattern in Envoy, Resilience4j, and cloud API gateways.
+
+---
+
+### 📘 [Entry #22/28] Sliding Window Pattern: Longest Substring Without Repeating Characters
+> **Category:** `ALGORITHMS` | **Tag:** `Dynamic Programming` | **Recorded:** Sep 7, 2026, 10:09 PM
+
+#### 💡 Overview
+Optimized O(N) substring analysis using two pointers and character index tracking.
+
+#### 💻 Implementation & Code Example
+```javascript
+function lengthOfLongestSubstring(s) {
+  const charMap = new Map();
+  let maxLen = 0;
+  let left = 0;
+
+  for (let right = 0; right < s.length; right++) {
+    const char = s[right];
+    if (charMap.has(char) && charMap.get(char) >= left) {
+      // Jump left pointer right after the duplicate's last position
+      left = charMap.get(char) + 1;
+    }
+    charMap.set(char, right);
+    maxLen = Math.max(maxLen, right - left + 1);
+  }
+
+  return maxLen;
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Time: O(N) single pass | Space: O(min(M, N)) where M is alphabet size
+
+#### 🎯 Key Architectural Takeaways
+- Avoids nested O(N^2) brute force loops by maintaining a dynamic valid window.
+- Storing last seen indices allows the left pointer to skip intermediate elements directly.
+- Foundational pattern for streaming data analytics, rate limiting windows, and packet stream parsing.
