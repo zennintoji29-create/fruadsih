@@ -201,3 +201,55 @@ Actionable engineering techniques to hit 95+ Google PageSpeed and Lighthouse sco
 - Reserve image and iframe dimensions with CSS `aspect-ratio` to completely eliminate layout shifts.
 - Preload critical LCP assets using `<link rel='preload' as='image' href='...' fetchpriority='high'>`.
 - Avoid reading layout properties (like `offsetHeight`) immediately after writing styles to prevent forced reflows.
+
+---
+
+### 📘 [Entry #1/28] Binary Search: Leftmost & Rightmost Insertion Boundaries
+> **Category:** `ALGORITHMS` | **Tag:** `Search & Divide-and-Conquer` | **Recorded:** Sep 7, 2026, 10:07 PM
+
+#### 💡 Overview
+Finding exact insertion bounds in sorted arrays without infinite loops.
+
+#### 💻 Implementation & Code Example
+```javascript
+// Finds first index where array[index] >= target (lower_bound)
+function lowerBound(arr, target) {
+  let left = 0;
+  let right = arr.length; // half-open interval [left, right)
+
+  while (left < right) {
+    // Avoids integer overflow: left + Math.floor((right - left) / 2)
+    const mid = (left + right) >>> 1;
+    if (arr[mid] >= target) {
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+  return left;
+}
+
+// Finds first index where array[index] > target (upper_bound)
+function upperBound(arr, target) {
+  let left = 0;
+  let right = arr.length;
+
+  while (left < right) {
+    const mid = (left + right) >>> 1;
+    if (arr[mid] > target) {
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+  return left;
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Time: O(log N) | Space: O(1)
+
+#### 🎯 Key Architectural Takeaways
+- Using the half-open interval `[left, right)` prevents infinite loop edge cases when searching boundaries.
+- The unsigned bitwise shift `>>> 1` computes midpoint without 32-bit integer arithmetic overflow.
+- Applicable to range queries, frequency counting in sorted arrays, and search space optimization.
