@@ -583,3 +583,65 @@ class LRUCache {
 - Combines a Hash Map for fast O(1) lookups with a Doubly Linked List for O(1) node repositioning.
 - Dummy head and tail nodes eliminate null-checking edge cases during insertion and deletion.
 - Essential for memory caching layers, HTTP caching, and database buffer pools.
+
+---
+
+### 📘 [Entry #8/28] Circuit Breaker Pattern for Resilient Microservices
+> **Category:** `SYSTEM-DESIGN` | **Tag:** `Resilience` | **Recorded:** Sep 7, 2026, 10:08 PM
+
+#### 💡 Overview
+Prevent cascading service failures when downstream dependencies degrade.
+
+#### 💻 Implementation & Code Example
+```javascript
+class CircuitBreaker {
+  constructor(fn, { failureThreshold = 5, cooldownPeriod = 10000 }) {
+    this.fn = fn;
+    this.failureThreshold = failureThreshold;
+    this.cooldownPeriod = cooldownPeriod;
+    this.state = "CLOSED"; // CLOSED, OPEN, HALF_OPEN
+    this.failureCount = 0;
+    this.nextAttempt = Date.now();
+  }
+
+  async fire(...args) {
+    if (this.state === "OPEN") {
+      if (Date.now() > this.nextAttempt) {
+        this.state = "HALF_OPEN";
+      } else {
+        throw new Error("Circuit is OPEN: fast-failing request");
+      }
+    }
+
+    try {
+      const result = await this.fn(...args);
+      this._onSuccess();
+      return result;
+    } catch (err) {
+      this._onFailure();
+      throw err;
+    }
+  }
+
+  _onSuccess() {
+    this.failureCount = 0;
+    this.state = "CLOSED";
+  }
+
+  _onFailure() {
+    this.failureCount++;
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = "OPEN";
+      this.nextAttempt = Date.now() + this.cooldownPeriod;
+    }
+  }
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Overhead: O(1) state checks | Resiliency: Prevents thread starvation during downstream outages
+
+#### 🎯 Key Architectural Takeaways
+- Fails fast when downstream services are dead, protecting your own thread pools and connection pools.
+- The Half-Open state safely probes the failing service before redirecting full traffic.
+- Standard pattern in Envoy, Resilience4j, and cloud API gateways.
