@@ -1218,3 +1218,47 @@ function lengthOfLongestSubstring(s) {
 - Avoids nested O(N^2) brute force loops by maintaining a dynamic valid window.
 - Storing last seen indices allows the left pointer to skip intermediate elements directly.
 - Foundational pattern for streaming data analytics, rate limiting windows, and packet stream parsing.
+
+---
+
+### 📘 [Entry #23/28] Defense-in-Depth: CSRF, XSS & Content Security Policy (CSP)
+> **Category:** `SECURITY` | **Tag:** `Web Security` | **Recorded:** Sep 7, 2026, 10:09 PM
+
+#### 💡 Overview
+Hardening web servers against cross-site scripting and request forgery attacks.
+
+#### 💻 Implementation & Code Example
+```javascript
+// Secure Cookie and Header configuration middleware
+function securityHeadersMiddleware(req, res, next) {
+  // 1. Strict Content Security Policy (CSP)
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'nonce-random123'; object-src 'none'; base-uri 'self';"
+  );
+
+  // 2. Prevent clickjacking
+  res.setHeader("X-Frame-Options", "DENY");
+
+  // 3. Force HTTPS and subdomains for 1 year
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+
+  // 4. Secure Authentication Cookie flags
+  res.cookie("session_token", "secure_value", {
+    httpOnly: true, // Inaccessible to JavaScript (mitigates XSS cookie theft)
+    secure: true,   // Transmitted exclusively over HTTPS
+    sameSite: "lax", // Protects against Cross-Site Request Forgery (CSRF)
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  });
+
+  next();
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Protection Level: A+ Security Rating across OWASP Top 10 vulnerabilities
+
+#### 🎯 Key Architectural Takeaways
+- `httpOnly` cookies prevent rogue XSS scripts from stealing user session tokens.
+- CSP restricts executable script origins, mitigating inline script injection.
+- `SameSite=Lax` or `Strict` prevents the browser from sending cookies on cross-origin requests.
