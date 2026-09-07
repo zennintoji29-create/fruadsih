@@ -768,3 +768,41 @@ async function idempotencyMiddleware(req, res, next) {
 - Prevents duplicate charges when client network drops before receiving the 200 OK response.
 - Idempotency keys should expire after a predictable TTL (e.g., 24 hours).
 - Crucial design pillar for Stripe, PayPal, and modern banking APIs.
+
+---
+
+### 📘 [Entry #12/28] Cache-Aside vs Write-Through vs Write-Behind Caching
+> **Category:** `SYSTEM-DESIGN` | **Tag:** `Caching Patterns` | **Recorded:** Sep 7, 2026, 10:08 PM
+
+#### 💡 Overview
+In-depth comparison of distributed caching strategies, eviction semantics, and consistency guarantees.
+
+#### 💻 Implementation & Code Example
+```javascript
+// Cache-Aside (Lazy Loading) Pattern Implementation
+async function getProductWithCacheAside(productId) {
+  const cacheKey = `product:${productId}`;
+  
+  // 1. Inspect Cache First
+  const cached = await redisClient.get(cacheKey);
+  if (cached) {
+    return JSON.parse(cached); // Cache Hit
+  }
+
+  // 2. Cache Miss: Query Database
+  const product = await db.products.findById(productId);
+  if (!product) return null;
+
+  // 3. Populate Cache with TTL (e.g., 3600 seconds)
+  await redisClient.set(cacheKey, JSON.stringify(product), 'EX', 3600);
+  return product;
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Read: O(1) Cache Hit, O(DB) Cache Miss | Invalidation: Explicit on writes
+
+#### 🎯 Key Architectural Takeaways
+- Cache-Aside only stores requested data, minimizing memory footprint but incurring a cold-start penalty.
+- Write-Through writes to cache and database concurrently, preventing stale data at the cost of higher write latency.
+- Write-Behind (Write-Back) buffers writes in cache and flushes asynchronously to DB for maximum write throughput.
