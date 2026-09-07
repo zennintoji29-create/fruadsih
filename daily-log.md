@@ -162,3 +162,42 @@ function throttle(fn, limit = 200) {
 - Use Debounce for autocomplete searches and auto-saving drafts (wait until user pauses typing).
 - Use Throttle for scroll progress bars, window resizing, and infinite scroll triggers.
 - Always provide a `.cancel()` method to clean up timers on component unmount in React/Vue.
+
+---
+
+### 📘 [Entry #2/2] Core Web Vitals Optimization: LCP, INP & CLS Breakdown
+> **Category:** `WEB-PERF` | **Tag:** `Web Performance` | **Recorded:** Sep 8, 2026, 03:36 AM
+
+#### 💡 Overview
+Actionable engineering techniques to hit 95+ Google PageSpeed and Lighthouse scores.
+
+#### 💻 Implementation & Code Example
+```css
+/* 1. Eliminate Cumulative Layout Shift (CLS) with aspect-ratio containers */
+.media-container {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #f0f0f0; /* Skeleton placeholder */
+}
+
+/* 2. Optimize Largest Contentful Paint (LCP) with font-display swap */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter.woff2') format('woff2');
+  font-display: swap; /* Immediately render fallback font, avoid blank text */
+}
+
+/* 3. Reduce Interaction to Next Paint (INP) by avoiding layout trashing */
+.smooth-transform {
+  will-change: transform;
+  transform: translateZ(0); /* Hardware accelerated layer promotion */
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Target Metrics: LCP < 2.5s | INP < 200ms | CLS < 0.1
+
+#### 🎯 Key Architectural Takeaways
+- Reserve image and iframe dimensions with CSS `aspect-ratio` to completely eliminate layout shifts.
+- Preload critical LCP assets using `<link rel='preload' as='image' href='...' fetchpriority='high'>`.
+- Avoid reading layout properties (like `offsetHeight`) immediately after writing styles to prevent forced reflows.
