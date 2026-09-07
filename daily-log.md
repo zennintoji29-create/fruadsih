@@ -444,3 +444,68 @@ const tokenBucketLua = `
 - Lua scripts execute atomically on Redis single-threaded engine, preventing race conditions between concurrent requests.
 - Token bucket allows bursts up to maximum capacity while enforcing average throughput via the refill rate.
 - Critical for API Gateways, payment gateway protection, and DDoS mitigation.
+
+---
+
+### 📘 [Entry #6/28] Advanced Debounce & Throttle with Immediate Execution Option
+> **Category:** `JAVASCRIPT` | **Tag:** `Functional Programming` | **Recorded:** Sep 7, 2026, 10:08 PM
+
+#### 💡 Overview
+Optimizing high-frequency event streams (scroll, resize, search input) in web applications.
+
+#### 💻 Implementation & Code Example
+```javascript
+// Debounce: Delays execution until 'wait' ms after the last trigger
+function debounce(fn, wait = 300, immediate = false) {
+  let timeoutId = null;
+
+  const debounced = function (...args) {
+    const callNow = immediate && !timeoutId;
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      timeoutId = null;
+      if (!immediate) fn.apply(this, args);
+    }, wait);
+
+    if (callNow) fn.apply(this, args);
+  };
+
+  debounced.cancel = () => {
+    clearTimeout(timeoutId);
+    timeoutId = null;
+  };
+
+  return debounced;
+}
+
+// Throttle: Guarantees execution at most once every 'limit' ms
+function throttle(fn, limit = 200) {
+  let inThrottle = false;
+  let lastArgs = null;
+
+  return function (...args) {
+    if (!inThrottle) {
+      fn.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+        if (lastArgs) {
+          fn.apply(this, lastArgs);
+          lastArgs = null;
+        }
+      }, limit);
+    } else {
+      lastArgs = args;
+    }
+  };
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Time: O(1) per invocation | Memory: O(1) closure context
+
+#### 🎯 Key Architectural Takeaways
+- Use Debounce for autocomplete searches and auto-saving drafts (wait until user pauses typing).
+- Use Throttle for scroll progress bars, window resizing, and infinite scroll triggers.
+- Always provide a `.cancel()` method to clean up timers on component unmount in React/Vue.
