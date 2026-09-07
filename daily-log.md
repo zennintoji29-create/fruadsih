@@ -689,3 +689,38 @@ function securityHeadersMiddleware(req, res, next) {
 - `httpOnly` cookies prevent rogue XSS scripts from stealing user session tokens.
 - CSP restricts executable script origins, mitigating inline script injection.
 - `SameSite=Lax` or `Strict` prevents the browser from sending cookies on cross-origin requests.
+
+---
+
+### 📘 [Entry #10/28] Optimistic vs Pessimistic Locking for High-Concurrency Updates
+> **Category:** `DATABASES` | **Tag:** `Concurrency Control` | **Recorded:** Sep 7, 2026, 10:08 PM
+
+#### 💡 Overview
+Preventing dirty writes and lost updates without holding long-lived database locks.
+
+#### 💻 Implementation & Code Example
+```sql
+-- Optimistic Concurrency Control (OCC)
+-- 1. Read record with current version number
+SELECT id, balance, version FROM accounts WHERE id = 101;
+-- (returns balance = 500, version = 4)
+
+-- 2. Execute business logic in app layer...
+-- new_balance = 500 - 50 = 450
+
+-- 3. Atomic update with conditional version check
+UPDATE accounts 
+SET balance = 450, version = version + 1
+WHERE id = 101 AND version = 4;
+
+-- If rows affected == 0, another concurrent worker modified the record!
+-- App retries the transaction cleanly without blocking other threads.
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Pessimistic: O(Locks) blocks threads | Optimistic: O(1) non-blocking, retries on collision
+
+#### 🎯 Key Architectural Takeaways
+- Optimistic locking shines in read-heavy workflows where concurrent updates on the same row are rare.
+- Pessimistic locking (`SELECT FOR UPDATE`) is safer in high-contention inventory checkout systems.
+- OCC completely eliminates database deadlocks caused by inverted lock acquisition order.
