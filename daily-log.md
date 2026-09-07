@@ -806,3 +806,45 @@ async function getProductWithCacheAside(productId) {
 - Cache-Aside only stores requested data, minimizing memory footprint but incurring a cold-start penalty.
 - Write-Through writes to cache and database concurrently, preventing stale data at the cost of higher write latency.
 - Write-Behind (Write-Back) buffers writes in cache and flushes asynchronously to DB for maximum write throughput.
+
+---
+
+### 📘 [Entry #13/28] JavaScript Event Loop: Microtasks, Macrotasks & Render Pipeline
+> **Category:** `JAVASCRIPT` | **Tag:** `Runtime Internals` | **Recorded:** Sep 7, 2026, 10:08 PM
+
+#### 💡 Overview
+Clear breakdown of V8 task execution order, promise queue draining, and animation frames.
+
+#### 💻 Implementation & Code Example
+```javascript
+console.log("1: Synchronous");
+
+setTimeout(() => {
+  console.log("2: Macrotask (Timer)");
+}, 0);
+
+Promise.resolve()
+  .then(() => {
+    console.log("3: Microtask 1");
+  })
+  .then(() => {
+    console.log("4: Microtask 2");
+  });
+
+queueMicrotask(() => {
+  console.log("5: Microtask 3");
+});
+
+console.log("6: Synchronous End");
+
+// Output Order:
+// 1 -> 6 -> 3 -> 5 -> 4 -> 2
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Priority: Synchronous Call Stack > Microtask Queue (drained completely) > Macrotask Queue
+
+#### 🎯 Key Architectural Takeaways
+- All microtasks (Promises, `queueMicrotask`, `process.nextTick`) are drained completely before the next macrotask runs.
+- Creating infinite microtasks (`Promise.resolve().then(...)` recursion) will starve the event loop and freeze the UI.
+- `requestAnimationFrame` executes right before the browser calculates styles and paints.
