@@ -1262,3 +1262,68 @@ function securityHeadersMiddleware(req, res, next) {
 - `httpOnly` cookies prevent rogue XSS scripts from stealing user session tokens.
 - CSP restricts executable script origins, mitigating inline script injection.
 - `SameSite=Lax` or `Strict` prevents the browser from sending cookies on cross-origin requests.
+
+---
+
+### 📘 [Entry #24/28] Advanced Debounce & Throttle with Immediate Execution Option
+> **Category:** `JAVASCRIPT` | **Tag:** `Functional Programming` | **Recorded:** Sep 7, 2026, 10:09 PM
+
+#### 💡 Overview
+Optimizing high-frequency event streams (scroll, resize, search input) in web applications.
+
+#### 💻 Implementation & Code Example
+```javascript
+// Debounce: Delays execution until 'wait' ms after the last trigger
+function debounce(fn, wait = 300, immediate = false) {
+  let timeoutId = null;
+
+  const debounced = function (...args) {
+    const callNow = immediate && !timeoutId;
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      timeoutId = null;
+      if (!immediate) fn.apply(this, args);
+    }, wait);
+
+    if (callNow) fn.apply(this, args);
+  };
+
+  debounced.cancel = () => {
+    clearTimeout(timeoutId);
+    timeoutId = null;
+  };
+
+  return debounced;
+}
+
+// Throttle: Guarantees execution at most once every 'limit' ms
+function throttle(fn, limit = 200) {
+  let inThrottle = false;
+  let lastArgs = null;
+
+  return function (...args) {
+    if (!inThrottle) {
+      fn.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+        if (lastArgs) {
+          fn.apply(this, lastArgs);
+          lastArgs = null;
+        }
+      }, limit);
+    } else {
+      lastArgs = args;
+    }
+  };
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Time: O(1) per invocation | Memory: O(1) closure context
+
+#### 🎯 Key Architectural Takeaways
+- Use Debounce for autocomplete searches and auto-saving drafts (wait until user pauses typing).
+- Use Throttle for scroll progress bars, window resizing, and infinite scroll triggers.
+- Always provide a `.cancel()` method to clean up timers on component unmount in React/Vue.
