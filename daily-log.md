@@ -1394,3 +1394,64 @@ SELECT * FROM users WHERE status = 'active';
 - B-Trees (PostgreSQL, MySQL InnoDB) write directly to data pages, offering exceptional read performance and predictable ACID latency.
 - LSM-Trees (RocksDB, Cassandra, ClickHouse) append to an in-memory MemTable and flush to SSTables sequentially, maximizing write throughput.
 - Always design composite index column order based on query cardinality (high selectivity first).
+
+---
+
+### 📘 [Entry #27/28] Trie (Prefix Tree) for Fast Autocomplete & Spell Checking
+> **Category:** `ALGORITHMS` | **Tag:** `Trees & Tries` | **Recorded:** Sep 7, 2026, 10:10 PM
+
+#### 💡 Overview
+Efficient retrieval tree for string prefix lookups and autocomplete suggestions.
+
+#### 💻 Implementation & Code Example
+```javascript
+class TrieNode {
+  constructor() {
+    this.children = new Map();
+    this.isEndOfWord = false;
+  }
+}
+
+class Trie {
+  constructor() {
+    this.root = new TrieNode();
+  }
+
+  insert(word) {
+    let curr = this.root;
+    for (const char of word) {
+      if (!curr.children.has(char)) {
+        curr.children.set(char, new TrieNode());
+      }
+      curr = curr.children.get(char);
+    }
+    curr.isEndOfWord = true;
+  }
+
+  search(word) {
+    const node = this._traverse(word);
+    return node !== null && node.isEndOfWord;
+  }
+
+  startsWith(prefix) {
+    return this._traverse(prefix) !== null;
+  }
+
+  _traverse(prefix) {
+    let curr = this.root;
+    for (const char of prefix) {
+      if (!curr.children.has(char)) return null;
+      curr = curr.children.get(char);
+    }
+    return curr;
+  }
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Time: O(L) where L is string length | Space: O(N * L)
+
+#### 🎯 Key Architectural Takeaways
+- Lookups depend only on the length of the query string, independent of the total number of dictionary words.
+- Shared prefix storage drastically reduces memory overhead for common vocabularies.
+- Used in search engine autocomplete, IP routing tables (longest prefix matching), and spell checkers.
