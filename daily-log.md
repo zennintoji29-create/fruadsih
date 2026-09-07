@@ -1455,3 +1455,77 @@ class Trie {
 - Lookups depend only on the length of the query string, independent of the total number of dictionary words.
 - Shared prefix storage drastically reduces memory overhead for common vocabularies.
 - Used in search engine autocomplete, IP routing tables (longest prefix matching), and spell checkers.
+
+---
+
+### 📘 [Entry #28/28] LRU (Least Recently Used) Cache Implementation
+> **Category:** `ALGORITHMS` | **Tag:** `Data Structures` | **Recorded:** Sep 7, 2026, 10:10 PM
+
+#### 💡 Overview
+O(1) time complexity cache eviction algorithm using a Doubly Linked List and Hash Map.
+
+#### 💻 Implementation & Code Example
+```javascript
+class DoublyLinkedListNode {
+  constructor(key, value) {
+    this.key = key;
+    this.value = value;
+    this.prev = null;
+    this.next = null;
+  }
+}
+
+class LRUCache {
+  constructor(capacity) {
+    this.capacity = capacity;
+    this.map = new Map();
+    this.head = new DoublyLinkedListNode(0, 0); // dummy head
+    this.tail = new DoublyLinkedListNode(0, 0); // dummy tail
+    this.head.next = this.tail;
+    this.tail.prev = this.head;
+  }
+
+  get(key) {
+    if (!this.map.has(key)) return -1;
+    const node = this.map.get(key);
+    this._remove(node);
+    this._add(node); // Move to head (most recently used)
+    return node.value;
+  }
+
+  put(key, value) {
+    if (this.map.has(key)) {
+      this._remove(this.map.get(key));
+    }
+    const newNode = new DoublyLinkedListNode(key, value);
+    this._add(newNode);
+    this.map.set(key, newNode);
+
+    if (this.map.size > this.capacity) {
+      const lru = this.tail.prev;
+      this._remove(lru);
+      this.map.delete(lru.key);
+    }
+  }
+
+  _add(node) {
+    node.next = this.head.next;
+    node.prev = this.head;
+    this.head.next.prev = node;
+    this.head.next = node;
+  }
+
+  _remove(node) {
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+  }
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Time: O(1) for both `get` and `put` | Space: O(capacity)
+
+#### 🎯 Key Architectural Takeaways
+- Combines a Hash Map for fast O(1) lookups with a Doubly Linked List for O(1) node repositioning.
+- Dummy head and tail nodes eliminate null-checking edge cases during insertion and deletion.
+- Essential for memory caching layers, HTTP caching, and database buffer pools.
