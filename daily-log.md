@@ -1119,3 +1119,65 @@ SELECT * FROM users WHERE status = 'active';
 - B-Trees (PostgreSQL, MySQL InnoDB) write directly to data pages, offering exceptional read performance and predictable ACID latency.
 - LSM-Trees (RocksDB, Cassandra, ClickHouse) append to an in-memory MemTable and flush to SSTables sequentially, maximizing write throughput.
 - Always design composite index column order based on query cardinality (high selectivity first).
+
+---
+
+### 📘 [Entry #21/28] Circuit Breaker Pattern for Resilient Microservices
+> **Category:** `SYSTEM-DESIGN` | **Tag:** `Resilience` | **Recorded:** Sep 7, 2026, 10:09 PM
+
+#### 💡 Overview
+Prevent cascading service failures when downstream dependencies degrade.
+
+#### 💻 Implementation & Code Example
+```javascript
+class CircuitBreaker {
+  constructor(fn, { failureThreshold = 5, cooldownPeriod = 10000 }) {
+    this.fn = fn;
+    this.failureThreshold = failureThreshold;
+    this.cooldownPeriod = cooldownPeriod;
+    this.state = "CLOSED"; // CLOSED, OPEN, HALF_OPEN
+    this.failureCount = 0;
+    this.nextAttempt = Date.now();
+  }
+
+  async fire(...args) {
+    if (this.state === "OPEN") {
+      if (Date.now() > this.nextAttempt) {
+        this.state = "HALF_OPEN";
+      } else {
+        throw new Error("Circuit is OPEN: fast-failing request");
+      }
+    }
+
+    try {
+      const result = await this.fn(...args);
+      this._onSuccess();
+      return result;
+    } catch (err) {
+      this._onFailure();
+      throw err;
+    }
+  }
+
+  _onSuccess() {
+    this.failureCount = 0;
+    this.state = "CLOSED";
+  }
+
+  _onFailure() {
+    this.failureCount++;
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = "OPEN";
+      this.nextAttempt = Date.now() + this.cooldownPeriod;
+    }
+  }
+}
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Overhead: O(1) state checks | Resiliency: Prevents thread starvation during downstream outages
+
+#### 🎯 Key Architectural Takeaways
+- Fails fast when downstream services are dead, protecting your own thread pools and connection pools.
+- The Half-Open state safely probes the failing service before redirecting full traffic.
+- Standard pattern in Envoy, Resilience4j, and cloud API gateways.
