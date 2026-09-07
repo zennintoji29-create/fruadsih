@@ -887,3 +887,52 @@ Actionable engineering techniques to hit 95+ Google PageSpeed and Lighthouse sco
 - Reserve image and iframe dimensions with CSS `aspect-ratio` to completely eliminate layout shifts.
 - Preload critical LCP assets using `<link rel='preload' as='image' href='...' fetchpriority='high'>`.
 - Avoid reading layout properties (like `offsetHeight`) immediately after writing styles to prevent forced reflows.
+
+---
+
+### 📘 [Entry #15/28] TypeScript Utility Types & Type Inference with `infer`
+> **Category:** `JAVASCRIPT` | **Tag:** `TypeScript Mastery` | **Recorded:** Sep 7, 2026, 10:09 PM
+
+#### 💡 Overview
+Leveraging conditional types, mapped types, and pattern matching in TypeScript.
+
+#### 💻 Implementation & Code Example
+```typescript
+// Custom implementation of ReturnType using 'infer'
+type MyReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+
+// Deep Recursive Partial for nested configuration objects
+type DeepPartial<T> = T extends Function
+  ? T
+  : T extends Array<infer U>
+  ? _DeepPartialArray<U>
+  : T extends object
+  ? _DeepPartialObject<T>
+  : T;
+
+type _DeepPartialArray<T> = Array<DeepPartial<T>>;
+type _DeepPartialObject<T> = { [P in keyof T]?: DeepPartial<T[P]> };
+
+// Example Usage:
+interface DatabaseConfig {
+  connection: {
+    host: string;
+    port: number;
+    credentials: { username: string; token: string; };
+  };
+  pool: { min: number; max: number; };
+}
+
+// Allows partial overrides at any depth
+const override: DeepPartial<DatabaseConfig> = {
+  connection: { credentials: { token: "new-secret" } }
+};
+```
+
+#### ⚡ Performance & Complexity
+- **Analysis:** Compile-time safety: O(0) runtime cost | Type inference accuracy: 100%
+
+#### 🎯 Key Architectural Takeaways
+- The `infer` keyword allows extracting inner types from function signatures, promises, and generics.
+- Recursive type definitions enable fully typed deeply nested config objects.
+- Zero runtime overhead because TypeScript types are completely erased during compilation.
